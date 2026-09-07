@@ -13,9 +13,19 @@
     <header class="site-header">
         <div class="container">
             <a href="#profile" class="brand">Faishal Falih</a>
-            <nav>
+            <nav class="desktop-nav" aria-label="Primary navigation">
                 <a href="#profile">Profile</a>
+                <a href="#experience">Experience</a>
             </nav>
+            <details class="mobile-nav">
+                <summary aria-label="Toggle navigation">
+                    <span class="menu-icon" aria-hidden="true"></span>
+                </summary>
+                <nav aria-label="Mobile navigation">
+                    <a href="#profile">Profile</a>
+                    <a href="#experience">Experience</a>
+                </nav>
+            </details>
         </div>
     </header>
 
@@ -48,6 +58,80 @@
                         <a href="mailto:faishalnfalih@gmail.com" class="social-link">Email</a>
                     </div>
                 </div>
+            </div>
+        </section>
+
+        <section class="experience" id="experience" aria-labelledby="experience-title">
+            <div class="container">
+                <div class="section-heading">
+                    <h2 id="experience-title">Experience</h2>
+                </div>
+                <details class="experience-entry">
+                    <summary class="experience-summary">
+                        <img class="company-logo" src="/static/img/csui.png" alt="CSUI logo">
+                        <span class="experience-info">
+                            <span class="experience-position">Teaching Assitant</span>
+                            <span class="company-name">Faculty of Computer Science, University of Indonesia</span>
+                            <span class="experience-timeline">
+                                <time datetime="2026-06">August 2026</time>
+                                <span aria-hidden="true">&mdash;</span>
+                                <time datetime="2026-12">Present</time>
+                            </span>
+                        </span>
+                        <span class="experience-toggle" aria-hidden="true"></span>
+                    </summary>
+                    <div class="experience-details">
+                        <ul class="achievement-list">
+                            <li>Teaching Assitant for Discrete Mathematics 1 (CSGE601010)</strong>.</li>
+                        </ul>
+                    </div>
+                </details>
+                <details class="experience-entry">
+                    <summary class="experience-summary">
+                        <img class="company-logo" src="/static/img/gdplabs.jpeg" alt="GDP Labs logo">
+                        <span class="experience-info">
+                            <span class="experience-position">Software Development Engineer Intern</span>
+                            <span class="company-name">GDP Labs</span>
+                            <span class="experience-timeline">
+                                <time datetime="2026-06">June 2026</time>
+                                <span aria-hidden="true">&mdash;</span>
+                                <time datetime="2026-09">September 2026</time>
+                            </span>
+                        </span>
+                        <span class="experience-toggle" aria-hidden="true"></span>
+                    </summary>
+                    <div class="experience-details">
+                        <ul class="achievement-list">
+                            <li>Built an AI agent for payroll reconciliation that orchestrates payroll submission validation, component mapping, reconciliation, root-cause analysis, and report delivery, saving up to <strong>IDR 60M/month</strong>.</li>
+                            <li>Designed PII-safe processing with strict data boundaries, LLM-assisted mapping and root-cause analysis, rate-limited batching, partial-result recovery, and unit tests across validation, reconciliation, reporting, and delivery workflows.</li>
+                            <li>Refactored the GitHub Projects V2 task-audit system by replacing inefficient API retrieval with paginated GraphQL queries, cutting GitHub API rate-limit consumption by <strong>100&times;</strong> and enabling throughput of up to <strong>1.25M records/hour</strong>.</li>
+                            <li>Built a multi-department automation integrating GitHub Projects, Google Sheets, Google Chat, and GitHub Actions. It is adopted by <strong>2 departments</strong> to validate task ownership, dates, and units, then send targeted reminders.</li>
+                        </ul>
+                    </div>
+                </details>
+                <details class="experience-entry">
+                    <summary class="experience-summary">
+                        <img class="company-logo" src="/static/img/ranumvilla.jpeg" alt="Ranum Villa logo">
+                        <span class="experience-info">
+                            <span class="experience-position">Software Engineer</span>
+                            <span class="company-name">Ranum Villa</span>
+                            <span class="experience-timeline">
+                                <time datetime="2025-08">August 2025</time>
+                                <span aria-hidden="true">&mdash;</span>
+                                <time datetime="2026-07">July 2026</time>
+                            </span>
+                        </span>
+                        <span class="experience-toggle" aria-hidden="true"></span>
+                    </summary>
+                    <div class="experience-details">
+                        <ul class="achievement-list">
+                            <li>Built and launched a full-stack booking platform using Next.js, TypeScript, PostgreSQL, Prisma, and Tailwind CSS, automating reservation management and increasing monthly occupancy by <strong>80%+.</strong></li>
+                            <li>Increased business revenue by <strong>10%</strong> by introducing an online booking flow that improved booking conversion and streamlined reservation handling.</li>
+                            <li>Implemented an admin dashboard with JWT-based authentication, bcrypt password hashing, protected routes, and rate limiting for public booking endpoints.</li>
+                            <li>Developed availability and pricing management with date-range conflict detection, day-of-week rates, date-specific overrides blocked dates, WhatsApp notifications, and optional Google Calendar synchronization.</li>
+                        </ul>
+                    </div>
+                </details>
             </div>
         </section>
     </main>

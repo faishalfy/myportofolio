@@ -25,6 +25,10 @@ h1, .brand {
     font-family: "Space Grotesk", -apple-system, sans-serif;
 }
 
+h2 {
+    font-family: "Space Grotesk", -apple-system, sans-serif;
+}
+
 .container {
     max-width: 960px;
     margin: 0 auto;
@@ -49,15 +53,25 @@ h1, .brand {
     text-decoration: none;
 }
 
-.site-header nav {
+.desktop-nav {
     display: flex;
     gap: 2rem;
 }
 
-.site-header nav a {
+.desktop-nav a,
+.mobile-nav nav a {
     color: var(--ink);
     text-decoration: none;
     font-size: 0.95rem;
+}
+
+.desktop-nav a:hover,
+.mobile-nav nav a:hover {
+    color: var(--accent-dark);
+}
+
+.mobile-nav {
+    display: none;
 }
 
 .hero {
@@ -169,6 +183,145 @@ h1, .brand {
     border: 3px solid var(--ink);
 }
 
+.experience {
+    padding: 5rem 0 5.5rem;
+    border-top: 1px solid var(--line);
+}
+
+.section-heading {
+    margin-bottom: 2rem;
+}
+
+.section-heading h2 {
+    font-size: clamp(2.25rem, 5vw, 3.5rem);
+    line-height: 1;
+}
+
+.experience-entry {
+    width: 100%;
+    background-color: #fffdf9;
+    border: 1px solid var(--line);
+    border-left: 5px solid var(--accent);
+    border-radius: var(--radius);
+    box-shadow: 0 12px 0 -8px var(--line);
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.experience-entry + .experience-entry {
+    margin-top: 1.25rem;
+}
+
+.experience-entry:hover,
+.experience-entry[open] {
+    transform: translateY(-4px);
+    border-color: var(--accent);
+    box-shadow: 0 18px 0 -8px var(--accent);
+}
+
+.experience-summary {
+    display: grid;
+    grid-template-columns: clamp(4.5rem, 9vw, 5.75rem) minmax(0, 1fr) auto;
+    align-items: center;
+    gap: clamp(1rem, 2.5vw, 1.75rem);
+    padding: clamp(1.5rem, 4vw, 2.5rem);
+    cursor: pointer;
+    list-style: none;
+}
+
+.experience-summary::-webkit-details-marker {
+    display: none;
+}
+
+.experience-summary::marker {
+    content: "";
+}
+
+.experience-info {
+    display: grid;
+    gap: 0.3rem;
+    min-width: 0;
+}
+
+.experience-position {
+    font-size: clamp(1.15rem, 2vw, 1.5rem);
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+.company-logo {
+    display: block;
+    width: clamp(4.5rem, 9vw, 5.75rem);
+    height: clamp(4.5rem, 9vw, 5.75rem);
+    object-fit: contain;
+    background-color: #fff;
+    border: 1px solid var(--line);
+    border-radius: 50%;
+}
+
+.company-name {
+    font-size: clamp(1rem, 1.8vw, 1.2rem);
+    font-weight: 700;
+}
+
+.experience-timeline {
+    width: fit-content;
+    padding: 0.35rem 0.65rem;
+    color: var(--accent-dark);
+    background-color: #f7e5dc;
+    border-radius: 999px;
+    font-size: 0.85rem;
+    font-weight: 700;
+}
+
+.experience-toggle::before {
+    display: grid;
+    place-items: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    color: var(--accent-dark);
+    border: 1px solid var(--line);
+    border-radius: 50%;
+    content: "+";
+    font-size: 1.5rem;
+    line-height: 1;
+}
+
+.experience-entry[open] .experience-toggle::before {
+    content: "−";
+}
+
+.experience-details {
+    margin: 0 clamp(1.5rem, 4vw, 2.5rem);
+    padding: 0 0 clamp(1.5rem, 4vw, 2.5rem);
+    border-top: 1px solid var(--line);
+}
+
+.achievement-list {
+    display: grid;
+    gap: 0.9rem;
+    padding: 1.25rem 0 0 1.15rem;
+    color: var(--text-muted);
+}
+
+.achievement-list li::marker {
+    color: var(--accent);
+}
+
+.achievement-list strong {
+    color: var(--ink);
+}
+
+.experience-summary:focus-visible {
+    outline: 3px solid var(--accent);
+    outline-offset: -3px;
+}
+
+a:focus-visible,
+summary:focus-visible {
+    outline: 3px solid var(--accent);
+    outline-offset: 4px;
+}
+
 .site-footer {
     padding: 1.5rem;
     color: var(--text-muted);
@@ -177,6 +330,114 @@ h1, .brand {
 }
 
 @media (max-width: 600px) {
+    .desktop-nav {
+        display: none;
+    }
+
+    .mobile-nav {
+        position: relative;
+        display: block;
+    }
+
+    .mobile-nav summary {
+        display: grid;
+        place-items: center;
+        width: 2.5rem;
+        height: 2.5rem;
+        cursor: pointer;
+        list-style: none;
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+    }
+
+    .mobile-nav summary::-webkit-details-marker {
+        display: none;
+    }
+
+    .menu-icon,
+    .menu-icon::before,
+    .menu-icon::after {
+        display: block;
+        width: 1.2rem;
+        height: 2px;
+        background-color: var(--ink);
+        content: "";
+        transition: transform 0.2s ease;
+    }
+
+    .menu-icon {
+        position: relative;
+    }
+
+    .menu-icon::before,
+    .menu-icon::after {
+        position: absolute;
+        left: 0;
+    }
+
+    .menu-icon::before {
+        top: -0.35rem;
+    }
+
+    .menu-icon::after {
+        top: 0.35rem;
+    }
+
+    .mobile-nav[open] .menu-icon {
+        background-color: transparent;
+    }
+
+    .mobile-nav[open] .menu-icon::before {
+        top: 0;
+        transform: rotate(45deg);
+    }
+
+    .mobile-nav[open] .menu-icon::after {
+        top: 0;
+        transform: rotate(-45deg);
+    }
+
+    .mobile-nav nav {
+        position: absolute;
+        top: calc(100% + 0.5rem);
+        right: 0;
+        z-index: 2;
+        display: grid;
+        min-width: 10rem;
+        padding: 0.5rem;
+        background-color: #fffdf9;
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        box-shadow: 0 10px 20px rgba(28, 25, 23, 0.12);
+    }
+
+    .mobile-nav nav a {
+        padding: 0.6rem 0.75rem;
+        border-radius: var(--radius);
+    }
+
+    .mobile-nav nav a:hover {
+        background-color: #f7e5dc;
+    }
+
+    .experience-summary {
+        grid-template-columns: 4.25rem minmax(0, 1fr);
+        gap: 0.85rem;
+    }
+
+    .company-logo {
+        width: 4.25rem;
+        height: 4.25rem;
+    }
+
+    .experience-toggle::before {
+        display: none;
+    }
+
+    .experience-position {
+        font-size: 1.05rem;
+    }
+
     .hero-grid {
         grid-template-columns: 1fr;
         grid-template-areas:
@@ -191,5 +452,14 @@ h1, .brand {
 
     .social-links {
         justify-content: flex-start;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        scroll-behavior: auto;
+        transition-duration: 0.01ms !important;
     }
 }
