@@ -16,6 +16,7 @@
             <nav class="desktop-nav" aria-label="Primary navigation">
                 <a href="#profile">Profile</a>
                 <a href="#experience">Experience</a>
+                <a href="#contact">Contact</a>
             </nav>
             <details class="mobile-nav">
                 <summary aria-label="Toggle navigation">
@@ -24,6 +25,7 @@
                 <nav aria-label="Mobile navigation">
                     <a href="#profile">Profile</a>
                     <a href="#experience">Experience</a>
+                    <a href="#contact">Contact</a>
                 </nav>
             </details>
         </div>
@@ -132,6 +134,42 @@
                         </ul>
                     </div>
                 </details>
+            </div>
+        </section>
+
+        <section class="contact" id="contact" aria-labelledby="contact-title">
+            <div class="container">
+                <div class="contact-intro">
+                    <h2 id="contact-title">Get In Touch</h2>
+                    <p>I am currently open to opportunities and collaborations. Feel free to reach out!</p>
+                </div>
+
+                <form class="contact-form" action="mailto:faishalnfalih@gmail.com?subject=Portfolio%20Contact" method="post" enctype="text/plain">
+                    <div class="contact-fields">
+                        <div class="form-field">
+                            <label for="contact-name">Name</label>
+                            <input id="contact-name" type="text" name="name" required autocomplete="name" placeholder="Your name">
+                        </div>
+                        <div class="form-field">
+                            <label for="contact-email">Email</label>
+                            <input id="contact-email" type="email" name="email" required autocomplete="email" placeholder="you@example.com">
+                        </div>
+                        <div class="form-field form-field--message">
+                            <label for="contact-message">Message</label>
+                            <textarea id="contact-message" name="message" required rows="6" placeholder="Write your message here..."></textarea>
+                        </div>
+                    </div>
+                    <button class="contact-submit" type="submit">Send Message</button>
+                </form>
+
+                <nav class="contact-links" aria-label="Contact links">
+                    <a class="contact-link" href="mailto:faishalnfalih@gmail.com">Email</a>
+                    <a class="contact-link" href="https://github.com/faishalfy">GitHub</a>
+                    <a class="contact-link" href="https://linkedin.com/in/faishalfalih/">LinkedIn</a>
+                    <a class="contact-link" href="https://www.instagram.com/faishal.falihhh/">Instagram</a>
+                    <a class="contact-link" href="https://discord.com/users/690058278176030758">Discord</a>
+                    <a class="contact-link" href="https://codeforces.com/profile/IsaL">Codeforces</a>
+                </nav>
             </div>
         </section>
     </main>
