@@ -25,3 +25,12 @@ class Experience(models.Model) :
     @property
     def is_ongoing(self) :
         return self.ended_at is None
+
+class Education(models.Model) :
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    institution = models.CharField(max_length=255)
+    education_level = models.CharField(max_length=16)
+    study_program = models.CharField(max_length=64, blank=True)
+    start_year = models.PositiveIntegerField()
+    end_year = models.PositiveIntegerField(blank=True, null=True)
+    logo_url = models.URLField(blank=True)
