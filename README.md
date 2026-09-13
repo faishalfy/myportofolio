@@ -14,6 +14,22 @@ Hobi : GYM
 
 3. Batasan utama static web ini adalah seluruh konten masih ditulis langsung di template HTML. Jika section experience, kontak, atau profil berubah, saya harus mengedit kode secara manual. Section kontak saat ini menggunakan `mailto:`, sehingga pengiriman bergantung pada email client milik user. Website tidak dapat menyimpan pesan, memberikan status pengiriman yang konsisten, atau melakukan validasi server-side. Pada implementasi berikutnya, fungsionalitas yang paling ingin saya tambahkan adalah backend contact form menggunakan Django. Fitur tersebut dapat menyimpan pesan, melakukan validasi server-side, mengirim email melalui layanan email, dan menampilkan pesan berhasil atau gagal. Setelah itu, data section experience juga dapat dipindahkan ke model Django agar bisa dikelola melalui admin tanpa mengubah template secara manual.
 
+### Tugas 2
+1. Alurnya :
+- Browser request page
+- portofolio/urls.py meneruskan requestnya ke main/urls.py
+- main/urls.py memilih view, contohnya show_main
+- View menyiapkan data untuk /experince/ dan /education/ dan data model diambil dari database
+- File html dikirim dan ditampilkan oleh browser
+
+Peran : 
+- urls.py proyek : portofolio/urls.py mengatur URL proyek dan menerukan request ke aplikasi
+- urls.py aplikasi : main/urls.py mengatur URL khusus aplikasi, seperti /experince/ dan /education/
+
+2. Karena lebih mudah untuk dimaintanance, untuk setiap perubahan data tidak perlu mengubah kode. Selanjutnya, dengan kita mengunakan looping pada HTML bisa menghemat line of code, implikasinya error juga lebih mudah di-identifikasi dan sangat fleksibel buat menambahkan model baru.
+
+3. Fungsi makemigrations memiliki fungsi untuk membuat file baru berdasarkan perubahan pada model Django, sedangkan migrate berfungsi untuk migrasi file ke dalam database. Contohnya pada model class Education dan Experience.
+
 ### AI Disclosure
 
 - Saya menggunakan OpenAI Codex (gpt-5.6/luna) untuk membantu proses pengerjaan. AI digunakan untuk membuat draft struktur HTML semantik, menyusun CSS responsive, merancang menu mobile berbasis `<details>`, melakukan audit selector CSS, dan menyusun dokumentasi awal.
@@ -21,3 +37,4 @@ Hobi : GYM
 - Section profile, experience, tanggal, kontak, gambar, urutan visual, dan keputusan untuk tetap menggunakan static web ditentukan dan diverifikasi secara manual. Saya memastikan bahwa implementasi tidak menambahkankan fitur di luar scope yang ditentukan.
 - AI memiliki keterbatasan dalam memahami konteks proyek secara keseluruhan. Saya perlu mengevaluasi hasilnya dan memastikan interface yang ada sudah sesuai.
 - Link chat untuk Tugas 1 : https://chatgpt.com/s/cx_6a9edb41d63c8191836bd7813e0bcc78
+- Link chat untuk Tugas 2 : saya tidak menggunakan AI untuk implement tugas ke-2, AI hanya digunakan untuk membantu jawaban Tugas 2 pada no 1
