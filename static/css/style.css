@@ -626,6 +626,15 @@ summary:focus-visible,
     gap: 1rem;
 }
 
+#education .experience-grid {
+    grid-template-columns: 1fr;
+    max-width: 48rem;
+}
+
+#education .company-logo {
+    padding: 0.6rem;
+}
+
 .experience-card {
     padding: 1.25rem;
     background-color: #fff;

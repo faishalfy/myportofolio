@@ -1,3 +1,4 @@
 from django.contrib import admin
+from main.models import Education
 
-# Register your models here.
+admin.site.register(Education)
