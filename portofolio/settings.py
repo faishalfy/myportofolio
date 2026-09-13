@@ -16,6 +16,8 @@ load_dotenv
 
 ALLOWED_HOSTS = ["localhost", "127.0.0.1", "faishal-falih-myportofolio.pws.cs.ui.ac.id"]
 
+CSRF_TRUSTED_ORIGINS = ["https://faishal-falih-myportofolio.pws.cs.ui.ac.id",]
+
 PRODUCTION = os.getenv('PRODUCTION', 'False').lower() == 'true'
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -29,7 +31,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-l7z5nq5%^p6x8*njm%9kynj2v!@^*frcjf5^31&n((l*+%7f8t'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 
 
