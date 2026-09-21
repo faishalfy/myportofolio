@@ -631,6 +631,10 @@ summary:focus-visible,
     max-width: 48rem;
 }
 
+#education .project-header {
+    max-width: 48rem;
+}
+
 #education .company-logo {
     padding: 0.6rem;
 }

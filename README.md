@@ -30,6 +30,13 @@ Peran :
 
 3. Fungsi makemigrations memiliki fungsi untuk membuat file baru berdasarkan perubahan pada model Django, sedangkan migrate berfungsi untuk migrasi file ke dalam database. Contohnya pada model class Education dan Experience.
 
+### Tugas 3
+1. ModelForm pada Django jauh lebih efisien dan aman karena langsung terhubung dengan database kita. CSRF token digunakan untuk memverifikasi request dan mengamankan endpoint sensitif.
+
+2. JSON lebih disukai dibanding XML karena sizenya lebih kecil, proses parsing lebih cepat, dan strukturnya sangat sederhana.
+
+3. Ketika browser mengakses URL API, misalnya `/api/education/`. URL tersebut meneruskan request ke fungsi view `get_education_json`. View kemudian mengambil data `Education` dari database. Data tersebut masih berupa objek model Django, sehingga dilakukan proses serialization. Hasil serialization berupa string JSON yang berisi nama model, primary key, dan nilai setiap field. String JSON tersebut kemudian dikembalikan menggunakan `HttpResponse` dengan `content_type="application/json"`. Dengan begitu, browser atau aplikasi lain dapat mengenali bahwa response tersebut berisi data JSON dan memprosesnya sebagai data terstruktur. Serialization diperlukan karena objek model Django dan QuerySet bukan merupakan format yang dapat langsung dikirim melalui HTTP atau dibaca oleh JavaScript. Serialization mengubah objek tersebut menjadi format standar, yaitu JSON, sehingga data dapat ditransmisikan dan digunakan oleh client. Saat data JSON ingin digunakan kembali sebagai objek Django, proses kebalikannya disebut deserialization.
+
 ### AI Disclosure
 
 - Saya menggunakan OpenAI Codex (gpt-5.6/luna) untuk membantu proses pengerjaan. AI digunakan untuk membuat draft struktur HTML semantik, menyusun CSS responsive, merancang menu mobile berbasis `<details>`, melakukan audit selector CSS, dan menyusun dokumentasi awal.
@@ -38,3 +45,4 @@ Peran :
 - AI memiliki keterbatasan dalam memahami konteks proyek secara keseluruhan. Saya perlu mengevaluasi hasilnya dan memastikan interface yang ada sudah sesuai.
 - Link chat untuk Tugas 1 : https://chatgpt.com/s/cx_6a9edb41d63c8191836bd7813e0bcc78
 - Link chat untuk Tugas 2 : saya tidak menggunakan AI untuk implement tugas ke-2, AI hanya digunakan untuk membantu jawaban Tugas 2 pada no 1
+- Link chat untuk Tugas 3 : https://chatgpt.com/s/cx_6ab14b5073288191aa3eecb4d269baf5

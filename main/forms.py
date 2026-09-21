@@ -1,6 +1,6 @@
 from django.forms import ModelForm, TextInput, Textarea, URLInput
 
-from main.models import Project
+from main.models import Education, Project
 
 class ProjectForm(ModelForm):
     class Meta:
@@ -50,3 +50,58 @@ class ProjectForm(ModelForm):
                 }
             ),
         }
+
+class EducationForm(ModelForm):
+    class Meta:
+        model = Education
+        fields = [
+            "institution",
+            "education_level",
+            "study_program",
+            "start_year",
+            "end_year",
+            "logo_url",
+        ]
+
+        labels = {
+            "institution" : "Nama Universitas",
+            "education_level" : "Strata",
+            "study_program" : "Program Studi",
+            "start_year" : "Tahun Masuk",
+            "end_year" : "Tahun Lulus",
+            "logo_url" : "URL Gambar Universitas",            
+        }
+
+        widgets = {
+        "institution": TextInput(
+            attrs={
+                "placeholder": "Standford University",
+                "maxlength": 255,
+            }
+        ),
+        "education_level": TextInput(
+            attrs={
+                "placeholder": "PhD",
+            }
+        ),
+        "study_program": TextInput(
+            attrs={
+                "placeholder": "Computer Science",
+            }
+        ),
+        "start_year": TextInput(
+            attrs={
+                "placeholder": "2025",
+            }
+        ),
+        "end_year": TextInput(
+            attrs={
+                "placeholder": "2029",
+            }
+        ),
+        "logo_url": URLInput(
+            attrs={
+                "placeholder": "https://id.wikipedia.org/wiki/Universitas_Stanford",
+            }
+        ),        
+    }       
