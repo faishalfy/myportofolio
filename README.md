@@ -46,3 +46,4 @@ Peran :
 - Link chat untuk Tugas 1 : https://chatgpt.com/s/cx_6a9edb41d63c8191836bd7813e0bcc78
 - Link chat untuk Tugas 2 : saya tidak menggunakan AI untuk implement tugas ke-2, AI hanya digunakan untuk membantu jawaban Tugas 2 pada no 1
 - Link chat untuk Tugas 3 : https://chatgpt.com/s/cx_6ab14b5073288191aa3eecb4d269baf5
+- Link chat untuk Tugas 4 : https://chatgpt.com/s/cx_6ab9e84c9fbc8191972b5f0e9ff43c3f
