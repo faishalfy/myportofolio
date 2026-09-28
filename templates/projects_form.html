@@ -1,14 +1,27 @@
 {% extends "base.html" %}
 {% block meta %}
-    <title>Add Project - {{ name }}</title>
+    <title>
+        {% if request.resolver_match.url_name == "update_project" %}Edit Project{% else %}Add Project{% endif %}
+        - {{ name }}
+    </title>
 {% endblock meta %}
 {% block content %}
     <main>
         <section class="experience-section">
             <div class="container">
-                <h1>Add New Projects</h1>
+                <h1>
+                    {% if request.resolver_match.url_name == "update_project" %}
+                        Edit Project
+                    {% else %}
+                        Add New Projects
+                    {% endif %}
+                </h1>
                 <form method="post"
-                      action="{% url 'main:create_project' %}"
+                      {% if request.resolver_match.url_name == "update_project" %}
+                          action="{% url 'main:update_project' request.resolver_match.kwargs.project_id %}"
+                      {% else %}
+                          action="{% url 'main:create_project' %}"
+                      {% endif %}
                       class="project-form">
                     {% csrf_token %}
                     {% for field in form %}
@@ -21,7 +34,9 @@
                         </div>
                     {% endfor %}
                     <div class="project-form-actions">
-                        <button type="submit" class="button">Tambah Project</button>
+                        <button type="submit" class="button">
+                            {% if request.resolver_match.url_name == "update_project" %}Simpan{% else %}Tambah Project{% endif %}
+                        </button>
                         <a href="{% url 'main:show_projects' %}" class="button button-secondary">Batal</a>
                     </div>
                 </form>

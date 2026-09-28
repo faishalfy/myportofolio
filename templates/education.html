@@ -9,10 +9,12 @@
                 <p class="section-kicker">Riwayat pendidikan</p>
                 <div class="project-header">
                     <h1>Education</h1>
-                    <a href="{% url 'main:create_education' %}"
-                        class="button project-add-button">
-                        <span aria-hidden="true">+</span>Tambah Pendidikan
-                    </a>
+                    {% if user.is_superuser %}
+                        <a href="{% url 'main:create_education' %}"
+                            class="button project-add-button">
+                            <span aria-hidden="true">+</span>Tambah Pendidikan
+                        </a>
+                    {% endif %}
                 </div>
 
                 <div class="experience-grid">
@@ -40,11 +42,15 @@
                             </p>
                             <div class="project-card-actions">
                                 <div class="project-actions">
-                                    <a href="{% url 'main:update_education' education.id %}" class="button">Edit</a>
-                                    <form method="post" action="{% url 'main:delete_education' education.id %}">
-                                        {% csrf_token %}
-                                        <button type="submit" class="button button-danger">Hapus</button>
-                                    </form>
+                                    {% if user.is_superuser or is_editor %}
+                                        <a href="{% url 'main:update_education' education.id %}" class="button">Edit</a>
+                                    {% endif %}
+                                    {% if user.is_superuser %}
+                                        <form method="post" action="{% url 'main:delete_education' education.id %}">
+                                            {% csrf_token %}
+                                            <button type="submit" class="button button-danger">Hapus</button>
+                                        </form>
+                                    {% endif %}
                                 </div>
                             </div>
                         </article>
