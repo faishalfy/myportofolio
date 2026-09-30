@@ -320,7 +320,7 @@ class AuthorizationAndStarTest(TestCase):
                 education_response = self.client.get(reverse("main:show_education"))
 
                 for response, marker, visible in [
-                    (project_response, reverse("main:create_project"), user and user.is_superuser),
+                    (project_response, 'popovertarget="add-project-modal"', user and user.is_superuser),
                     (project_response, f'href="{project_edit_url}"', can_edit),
                     (project_response, f'action="{project_delete_url}"', user and user.is_superuser),
                     (education_response, reverse("main:create_education"), user and user.is_superuser),

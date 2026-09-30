@@ -8,12 +8,17 @@
             <div class="container">
                 <p class="section-kicker">Karya yang saya bangun</p>
                 <div class="project-header">
+                    <button class="button button-secondary" onclick="showToast('Notifikasi Sistem', 'Project berhasil dimuat dengan baik!', 'success')">
+                        Test Toast Notifikasi
+                    </button>
                     <h1>Projects</h1>
                     {% if user.is_superuser %}
-                        <a href="{% url 'main:create_project' %}"
-                        class="button project-add-button">
-                            <span aria-hidden="true">+</span>Tambah Proyek
-                        </a>
+                        <button type="button"
+                            class="button project-add-button"
+                            popovertarget="add-project-modal">
+                            <span aria-hidden="true">+</span>
+                            Tambah Proyek
+                        </button>
                     {% endif %}
                 </div>
                 <form method="get"
@@ -27,6 +32,7 @@
                            aria-label="Cari berdasarkan nama proyek">
                     <button type="submit" class="button">Cari</button>
                 </form>
+
                 <div class="experience-grid project-grid">
                     {% for project in project_list %}
                         <article class="experience-card">
@@ -63,5 +69,40 @@
                 </div>
             </div>
         </section>
-    </main>
+    </main> 
+
+    {% if user.is_superuser %}
+    {% include "components/project_form_modal.html" %}
+    <script>
+        const projectForm = document.getElementById("project-form");
+        projectForm.addEventListener("submit", async (event) => {
+            event.preventDefault();
+            const submitButton = projectForm.querySelector('button[type="submit"]');
+            submitButton.disabled = true;
+
+            try {
+                const response = await fetch(projectForm.action, {
+                    method: "POST",
+                    body: new FormData(projectForm),
+                });
+                const result = await response.json();
+
+                if (response.ok) {
+                    window.location.reload();
+                    return;
+                }
+
+                const errors = result.errors
+                    ? Object.values(result.errors).flat().map(({ message }) => message)
+                    : [result.message || `Terjadi kesalahan (status ${response.status}).`];
+                showToast("Gagal menambahkan proyek", errors.join(" "), "error");
+            } catch (error) {
+                console.error("Error adding project:", error);
+                showToast("Gagal menambahkan proyek", "Tidak dapat terhubung ke server. Silakan coba lagi.", "error");
+            } finally {
+                submitButton.disabled = false;
+            }
+        });
+    </script>
+    {% endif %}
 {% endblock content %}

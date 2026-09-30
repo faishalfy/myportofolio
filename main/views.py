@@ -4,12 +4,13 @@ from django.contrib.auth.decorators import login_required  # Tambahkan baris ini
 from django.core.exceptions import PermissionDenied        # Tambahkan baris ini
 from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
 import datetime
+from django.views.decorators.http import require_POST
 
 from main.models import Education, Experience, Project
 from main.forms import ProjectForm, EducationForm
 from django.contrib import messages
 from django.core import serializers
-from django.http import HttpResponse, HttpResponseNotAllowed
+from django.http import HttpResponse, HttpResponseNotAllowed, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 
 def show_main(request):
@@ -61,6 +62,7 @@ def show_projects(request):
     context = {
         "name": "Faishal Falih",
         "project_list": projects,
+        "form": ProjectForm(),
         "title_query": title_query,
         "is_editor": is_editor(request.user),
     }
@@ -134,13 +136,7 @@ def get_projects_json(request):
     projects_json = serializers.serialize(
         "json",
         projects,
-        fields=[
-            "title",
-            "description",
-            "tech_stack",
-            "project_url",
-            "project_image_url",
-        ],
+        fields=["title", "description", "tech_stack", "project_url", "project_image_url"],
     )
     return HttpResponse(projects_json, content_type="application/json")
 
@@ -244,3 +240,21 @@ def is_editor(user):
 
 def can_edit(user):
     return user.is_superuser or is_editor(user)
+
+@require_POST
+def create_project_ajax(request):
+    if not request.user.is_superuser:
+        return JsonResponse(
+            {"message": "Hanya pemilik portofolio yang dapat menambahkan proyek."},
+            status=403,
+        )
+
+    form = ProjectForm(request.POST)
+    if form.is_valid():
+        project = form.save()
+        return JsonResponse(
+            {"message": "Proyek berhasil ditambahkan.", "pk": str(project.id)},
+            status=201,
+        )
+
+    return JsonResponse({"errors": form.errors.get_json_data()}, status=400)
