@@ -25,11 +25,18 @@ function renderExperience(item) {
         card.append(thumbnail);
     }
 
+    card.append(experienceText("span", "experience-category", item.category));
+    if (item.company) {
+        card.append(experienceText("p", "experience-company", item.company));
+    }
     card.append(
-        experienceText("span", "experience-category", item.category),
         experienceText("h2", "", item.title),
         experienceText("p", "experience-description", item.description),
-        experienceText("p", "experience-status", item.is_ongoing ? "Sedang berlangsung" : "Selesai"),
+        experienceText(
+            "p",
+            "experience-status",
+            item.is_ongoing ? "Sedang berlangsung" : "Selesai",
+        ),
     );
     return card;
 }
@@ -63,15 +70,54 @@ async function loadExperience() {
     }
 }
 
-experienceSearch.addEventListener("input", () => {
+experienceSearch.addEventListener("input", function () {
     clearTimeout(experienceSearchTimer);
     experienceSearchTimer = setTimeout(loadExperience, 300);
 });
 
-experienceSearchForm.addEventListener("submit", (event) => {
+experienceSearchForm.addEventListener("submit", function (event) {
     event.preventDefault();
     clearTimeout(experienceSearchTimer);
     loadExperience();
 });
+
+const experienceForm = document.getElementById("experience-form");
+if (experienceForm) {
+    experienceForm.addEventListener("submit", async function (event) {
+        event.preventDefault();
+        const submitButton = experienceForm.querySelector('button[type="submit"]');
+        submitButton.disabled = true;
+
+        try {
+            const response = await fetch(experienceForm.action, {
+                method: "POST",
+                body: new FormData(experienceForm),
+            });
+            const result = await response.json();
+
+            if (response.status === 201) {
+                experienceForm.reset();
+                experienceSearch.value = "";
+                document.getElementById("add-experience-modal").hidePopover();
+                showToast("Experience berhasil ditambahkan", result.message, "success");
+                loadExperience();
+                return;
+            }
+
+            const errors = result.errors
+                ? Object.entries(result.errors).flatMap(function ([field, items]) {
+                    return items.map(function ({ message }) {
+                        return `${field}: ${message}`;
+                    });
+                })
+                : [result.message || `Terjadi kesalahan (status ${response.status}).`];
+            showToast("Gagal menambahkan Experience", errors.join(" "), "error");
+        } catch {
+            showToast("Gagal menambahkan Experience", "Tidak dapat terhubung ke server. Silakan coba lagi.", "error");
+        } finally {
+            submitButton.disabled = false;
+        }
+    });
+}
 
 loadExperience();

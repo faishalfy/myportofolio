@@ -102,15 +102,54 @@ async function loadEducation() {
     }
 }
 
-educationSearch.addEventListener("input", () => {
+educationSearch.addEventListener("input", function () {
     clearTimeout(educationSearchTimer);
     educationSearchTimer = setTimeout(loadEducation, 300);
 });
 
-educationSearchForm.addEventListener("submit", (event) => {
+educationSearchForm.addEventListener("submit", function (event) {
     event.preventDefault();
     clearTimeout(educationSearchTimer);
     loadEducation();
 });
+
+const educationForm = document.getElementById("education-form");
+if (educationForm) {
+    educationForm.addEventListener("submit", async function (event) {
+        event.preventDefault();
+        const submitButton = educationForm.querySelector('button[type="submit"]');
+        submitButton.disabled = true;
+
+        try {
+            const response = await fetch(educationForm.action, {
+                method: "POST",
+                body: new FormData(educationForm),
+            });
+            const result = await response.json();
+
+            if (response.status === 201) {
+                educationForm.reset();
+                educationSearch.value = "";
+                document.getElementById("add-education-modal").hidePopover();
+                showToast("Education berhasil ditambahkan", result.message, "success");
+                loadEducation();
+                return;
+            }
+
+            const errors = result.errors
+                ? Object.entries(result.errors).flatMap(function ([field, items]) {
+                    return items.map(function ({ message }) {
+                        return `${field}: ${message}`;
+                    });
+                })
+                : [result.message || `Terjadi kesalahan (status ${response.status}).`];
+            showToast("Gagal menambahkan Education", errors.join(" "), "error");
+        } catch {
+            showToast("Gagal menambahkan Education", "Tidak dapat terhubung ke server. Silakan coba lagi.", "error");
+        } finally {
+            submitButton.disabled = false;
+        }
+    });
+}
 
 loadEducation();

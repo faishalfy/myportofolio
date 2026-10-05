@@ -3,12 +3,13 @@ from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required  # Tambahkan baris ini
 from django.core.exceptions import PermissionDenied        # Tambahkan baris ini
 from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
+from django.db.models import Q
 import datetime
 from django.urls import reverse
 from django.views.decorators.http import require_GET, require_POST
 
 from main.models import Education, Experience, Project
-from main.forms import ProjectForm, EducationForm
+from main.forms import ProjectForm, EducationForm, ExperienceForm
 from django.contrib import messages
 from django.http import HttpResponseNotAllowed, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
@@ -31,6 +32,8 @@ def show_experience(request):
     context = {
         "name": "Faishal Falih",
     }
+    if request.user.is_superuser:
+        context["experience_form"] = ExperienceForm()
     return render(request, "experience.html", context)
 
 
@@ -38,6 +41,8 @@ def show_education(request):
     context = {
         "name": "Faishal Falih",
     }
+    if request.user.is_superuser:
+        context["education_form"] = EducationForm()
     return render(request, "education.html", context)
 
 
@@ -90,6 +95,42 @@ def create_education(request):
         "form" : form,
     }
     return render(request, "education_form.html", context)
+
+
+def _create_ajax_form(request, form_class, permission_message, success_message):
+    if not request.user.is_superuser:
+        return JsonResponse({"message": permission_message}, status=403)
+
+    form = form_class(request.POST)
+    if not form.is_valid():
+        return JsonResponse({"errors": form.errors.get_json_data()}, status=400)
+
+    instance = form.save()
+    return JsonResponse(
+        {"message": success_message, "id": str(instance.pk)},
+        status=201,
+    )
+
+
+@require_POST
+def create_education_ajax(request):
+    return _create_ajax_form(
+        request,
+        EducationForm,
+        "Hanya pemilik portofolio yang dapat menambahkan pendidikan.",
+        "Pendidikan berhasil ditambahkan.",
+    )
+
+
+@require_POST
+def create_experience_ajax(request):
+    return _create_ajax_form(
+        request,
+        ExperienceForm,
+        "Hanya pemilik portofolio yang dapat menambahkan pengalaman.",
+        "Pengalaman berhasil ditambahkan.",
+    )
+
 
 @login_required(login_url="/login/")
 def delete_project(request, project_id):
@@ -176,11 +217,14 @@ def get_experience_json(request):
     query = request.GET.get("q", "").strip()
     experiences = Experience.objects.all()
     if query:
-        experiences = experiences.filter(title__icontains=query)
+        experiences = experiences.filter(
+            Q(title__icontains=query) | Q(company__icontains=query)
+        )
 
     data = [
         {
             "id": str(experience.pk),
+            "company": experience.company,
             "title": experience.title,
             "description": experience.description,
             "category": experience.get_category_display(),

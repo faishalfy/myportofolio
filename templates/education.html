@@ -11,10 +11,11 @@
                 <div class="project-header">
                     <h1>Education</h1>
                     {% if user.is_superuser %}
-                        <a href="{% url 'main:create_education' %}"
-                            class="button project-add-button">
+                        <button type="button"
+                            class="button project-add-button"
+                            popovertarget="add-education-modal">
                             <span aria-hidden="true">+</span>Tambah Pendidikan
-                        </a>
+                        </button>
                     {% endif %}
                 </div>
 
@@ -33,12 +34,14 @@
                 <div id="education-list"
                      class="experience-grid"
                      data-api-url="{% url 'main:get_education_json' %}"></div>
-                {% if user.is_superuser %}
-                    <form id="education-csrf-form" hidden>{% csrf_token %}</form>
-                {% endif %}
+                <form id="education-csrf-form" hidden>{% csrf_token %}</form>
             </div>
         </section>
     </main>
+
+    {% if user.is_superuser %}
+        {% include "components/data_form_modal.html" with modal_id="add-education-modal" modal_title="Tambah Pendidikan" form_id="education-form" submit_label="Tambah Pendidikan" url_name="main:create_education_ajax" form=education_form %}
+    {% endif %}
 
     <iframe data-testid="embed-iframe" style="border-radius:12px" src="https://open.spotify.com/embed/track/0aXrPDQKpsGlZKVzEnurSK?utm_source=generator&si=2c34ee66da2749a9" width="100%" height="152" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>
     <script src="{% static 'js/education.js' %}" defer></script>
