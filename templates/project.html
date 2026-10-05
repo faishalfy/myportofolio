@@ -8,18 +8,18 @@
             <div class="container">
                 <p class="section-kicker">Karya yang saya bangun</p>
                 <div class="project-header">
-                    <button class="button button-secondary" onclick="showToast('Notifikasi Sistem', 'Project berhasil dimuat dengan baik!', 'success')">
-                        Test Toast Notifikasi
-                    </button>
                     <h1>Projects</h1>
                     {% if user.is_superuser %}
                         <button type="button"
                             class="button project-add-button"
                             popovertarget="add-project-modal">
-                            <span aria-hidden="true">+</span>
-                            Tambah Proyek
-                        </button>
+                        <span aria-hidden="true">+</span>
+                        Tambah Proyek
+                    </button>
                     {% endif %}
+                <button class="button button-secondary" onclick="showToast('Notifikasi Sistem', 'Project berhasil dimuat dengan baik!', 'success')">
+                    Notifikasi
+                </button>
                 </div>
                 <form method="get"
                       action="{% url 'main:show_projects' %}"

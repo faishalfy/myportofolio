@@ -4,13 +4,13 @@ from django.contrib.auth.decorators import login_required  # Tambahkan baris ini
 from django.core.exceptions import PermissionDenied        # Tambahkan baris ini
 from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
 import datetime
-from django.views.decorators.http import require_POST
+from django.urls import reverse
+from django.views.decorators.http import require_GET, require_POST
 
 from main.models import Education, Experience, Project
 from main.forms import ProjectForm, EducationForm
 from django.contrib import messages
-from django.core import serializers
-from django.http import HttpResponse, HttpResponseNotAllowed, JsonResponse
+from django.http import HttpResponseNotAllowed, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 
 def show_main(request):
@@ -30,24 +30,13 @@ def show_main(request):
 def show_experience(request):
     context = {
         "name": "Faishal Falih",
-        "experience_list": Experience.objects.all(),
     }
     return render(request, "experience.html", context)
 
 
 def show_education(request):
-    json_response = get_education_json(request)
-
-    educations = serializers.deserialize(
-        "json",
-        json_response.content.decode("utf-8"),
-    )
-    educations = [education.object for education in educations]
-
     context = {
         "name": "Faishal Falih",
-        "education_list": educations,
-        "is_editor": is_editor(request.user),
     }
     return render(request, "education.html", context)
 
@@ -128,22 +117,81 @@ def delete_education(request, education_id):
 
 def get_projects_json(request):
     title_query = request.GET.get("title", "").strip()
-    projects = Project.objects.all()
+    projects = Project.objects.prefetch_related('starred_by').all()
 
     if title_query:
         projects = projects.filter(title__icontains=title_query)
 
-    projects_json = serializers.serialize(
-        "json",
-        projects,
-        fields=["title", "description", "tech_stack", "project_url", "project_image_url"],
-    )
-    return HttpResponse(projects_json, content_type="application/json")
+    # Konstruksi data JSON secara manual agar bisa menyisipkan logika Star
+    data = []
+    for project in projects:
+        starred_users = project.starred_by.all()
+        is_starred = request.user in starred_users if request.user.is_authenticated else False
+        starred_by_names = ", ".join([u.username for u in starred_users])
 
+        data.append({
+            "pk": str(project.id),
+            "fields": {
+                "title": project.title,
+                "description": project.description,
+                "tech_stack": project.tech_stack,
+                "project_url": project.project_url,
+                "project_image_url": project.project_image_url,
+                "star_count": starred_users.count(),
+                "is_starred": is_starred,
+                "starred_by_names": starred_by_names,
+            }
+        })
+
+    return JsonResponse(data, safe=False)
+
+@require_GET
 def get_education_json(request):
-    education = Education.objects.all()
-    education_json = serializers.serialize("json", education)
-    return HttpResponse(education_json, content_type="application/json")
+    query = request.GET.get("q", "").strip()
+    educations = Education.objects.all()
+    if query:
+        educations = educations.filter(institution__icontains=query)
+
+    may_edit = can_edit(request.user)
+    may_delete = request.user.is_superuser
+    data = [
+        {
+            "id": str(education.pk),
+            "institution": education.institution,
+            "education_level": education.education_level,
+            "study_program": education.study_program,
+            "start_year": education.start_year,
+            "end_year": education.end_year,
+            "logo_url": education.logo_url,
+            "edit_url": reverse("main:update_education", args=[education.pk]) if may_edit else None,
+            "delete_url": reverse("main:delete_education", args=[education.pk]) if may_delete else None,
+        }
+        for education in educations
+    ]
+    return JsonResponse(data, safe=False)
+
+
+@require_GET
+def get_experience_json(request):
+    query = request.GET.get("q", "").strip()
+    experiences = Experience.objects.all()
+    if query:
+        experiences = experiences.filter(title__icontains=query)
+
+    data = [
+        {
+            "id": str(experience.pk),
+            "title": experience.title,
+            "description": experience.description,
+            "category": experience.get_category_display(),
+            "thumbnail": experience.thumbnail,
+            "started_at": experience.started_at.isoformat(),
+            "ended_at": experience.ended_at.isoformat() if experience.ended_at else None,
+            "is_ongoing": experience.is_ongoing,
+        }
+        for experience in experiences
+    ]
+    return JsonResponse(data, safe=False)
 
 @login_required(login_url="/login/")
 def update_education(request, education_id):

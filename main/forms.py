@@ -118,3 +118,18 @@ class EducationForm(ModelForm):
             }
         ),        
     }       
+
+    def clean_institution(self):
+        institution = strip_tags(self.cleaned_data["institution"]).strip()
+        if not institution:
+            raise ValidationError("Nama institusi wajib diisi.")
+        return institution
+
+    def clean_education_level(self):
+        education_level = strip_tags(self.cleaned_data["education_level"]).strip()
+        if not education_level:
+            raise ValidationError("Jenjang pendidikan wajib diisi.")
+        return education_level
+
+    def clean_study_program(self):
+        return strip_tags(self.cleaned_data["study_program"]).strip()

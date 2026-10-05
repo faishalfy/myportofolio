@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load static %}
 {% block meta %}
     <title>Experience - {{ name }}</title>
 {% endblock meta %}
@@ -9,30 +10,23 @@
                 <p class="section-kicker">Perjalanan saya sejauh ini</p>
                 <h1>Experience</h1>
 
-                <div class="experience-grid">
-                    {% for experience in experience_list %}
-                        <article class="experience-card">
-                            <span class="experience-category">
-                                {{ experience.get_category_display }}
-                            </span>
-                            <h2>{{ experience.title }}</h2>
-                            <p class="experience-description">
-                                {{ experience.description }}
-                            </p>
+                <form id="experience-search-form" class="project-search" role="search">
+                    <input id="experience-search"
+                           class="project-search__input"
+                           type="search"
+                           placeholder="Cari judul pengalaman"
+                           aria-label="Cari judul pengalaman">
+                    <button class="button" type="submit">Cari</button>
+                </form>
 
-                            {% if experience.is_ongoing %}
-                                <p class="experience-status">Sedang berlangsung</p>
-                            {% else %}
-                                <p class="experience-status">Selesai</p>
-                            {% endif %}
-                        </article>
-                    {% empty %}
-                        <p class="empty-state">
-                            Belum ada pengalaman yang ditambahkan.
-                        </p>
-                    {% endfor %}
-                </div>
+                <p id="experience-status" class="empty-state" role="status" aria-live="polite">
+                    Memuat data pengalaman...
+                </p>
+                <div id="experience-list"
+                     class="experience-grid"
+                     data-api-url="{% url 'main:get_experience_json' %}"></div>
             </div>
         </section>
     </main>
+    <script src="{% static 'js/experience.js' %}" defer></script>
 {% endblock content %}
