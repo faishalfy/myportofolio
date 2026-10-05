@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load static %}
 {% block meta %}
     <title>Education - {{ name }}</title>
 {% endblock meta %}
@@ -10,59 +11,38 @@
                 <div class="project-header">
                     <h1>Education</h1>
                     {% if user.is_superuser %}
-                        <a href="{% url 'main:create_education' %}"
-                            class="button project-add-button">
+                        <button type="button"
+                            class="button project-add-button"
+                            popovertarget="add-education-modal">
                             <span aria-hidden="true">+</span>Tambah Pendidikan
-                        </a>
+                        </button>
                     {% endif %}
                 </div>
 
-                <div class="experience-grid">
-                    {% for education in education_list %}
-                        <article class="experience-card">
-                            {% if education.logo_url %}
-                                <img class="company-logo" src="{{ education.logo_url }}" alt="Logo {{ education.institution }}">
-                            {% endif %}
-                            <span class="experience-category">
-                                {{ education.education_level }}
-                            </span>
-                            <h2>{{ education.institution }}</h2>
-                            {% if education.study_program %}
-                                <p class="experience-description">
-                                    {{ education.study_program }}
-                                </p>
-                            {% endif %}
-                            <p class="experience-status">
-                                {{ education.start_year }}&mdash;
-                                {% if education.end_year %}
-                                    {{ education.end_year }}
-                                {% else %}
-                                    Sekarang
-                                {% endif %}
-                            </p>
-                            <div class="project-card-actions">
-                                <div class="project-actions">
-                                    {% if user.is_superuser or is_editor %}
-                                        <a href="{% url 'main:update_education' education.id %}" class="button">Edit</a>
-                                    {% endif %}
-                                    {% if user.is_superuser %}
-                                        <form method="post" action="{% url 'main:delete_education' education.id %}">
-                                            {% csrf_token %}
-                                            <button type="submit" class="button button-danger">Hapus</button>
-                                        </form>
-                                    {% endif %}
-                                </div>
-                            </div>
-                        </article>
-                    {% empty %}
-                        <p class="empty-state">
-                            Belum ada riwayat pendidikan yang ditambahkan.
-                        </p>
-                    {% endfor %}
-                </div>
+                <form id="education-search-form" class="project-search" role="search">
+                    <input id="education-search"
+                           class="project-search__input"
+                           type="search"
+                           placeholder="Cari nama institusi"
+                           aria-label="Cari nama institusi">
+                    <button class="button" type="submit">Cari</button>
+                </form>
+
+                <p id="education-status" class="empty-state" role="status" aria-live="polite">
+                    Memuat data pendidikan...
+                </p>
+                <div id="education-list"
+                     class="experience-grid"
+                     data-api-url="{% url 'main:get_education_json' %}"></div>
+                <form id="education-csrf-form" hidden>{% csrf_token %}</form>
             </div>
         </section>
     </main>
 
+    {% if user.is_superuser %}
+        {% include "components/data_form_modal.html" with modal_id="add-education-modal" modal_title="Tambah Pendidikan" form_id="education-form" submit_label="Tambah Pendidikan" url_name="main:create_education_ajax" form=education_form %}
+    {% endif %}
+
     <iframe data-testid="embed-iframe" style="border-radius:12px" src="https://open.spotify.com/embed/track/0aXrPDQKpsGlZKVzEnurSK?utm_source=generator&si=2c34ee66da2749a9" width="100%" height="152" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>
+    <script src="{% static 'js/education.js' %}" defer></script>
 {% endblock content %}

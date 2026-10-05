@@ -1,7 +1,7 @@
-from django.forms import ModelForm, TextInput, Textarea, URLInput
+from django.forms import DateInput, DateTimeField, ModelForm, TextInput, Textarea, URLInput
 from django.core.exceptions import ValidationError
 from django.utils.html import strip_tags
-from main.models import Education, Project
+from main.models import Education, Experience, Project
 
 class ProjectForm(ModelForm):
     class Meta:
@@ -118,3 +118,68 @@ class EducationForm(ModelForm):
             }
         ),        
     }       
+
+    def clean_institution(self):
+        institution = strip_tags(self.cleaned_data["institution"]).strip()
+        if not institution:
+            raise ValidationError("Nama institusi wajib diisi.")
+        return institution
+
+    def clean_education_level(self):
+        education_level = strip_tags(self.cleaned_data["education_level"]).strip()
+        if not education_level:
+            raise ValidationError("Jenjang pendidikan wajib diisi.")
+        return education_level
+
+    def clean_study_program(self):
+        return strip_tags(self.cleaned_data["study_program"]).strip()
+
+
+class ExperienceForm(ModelForm):
+    ended_at = DateTimeField(
+        required=False,
+        input_formats=["%Y-%m-%d"],
+        widget=DateInput(format="%Y-%m-%d", attrs={"type": "date"}),
+    )
+
+    class Meta:
+        model = Experience
+        fields = ["company", "title", "description", "category", "thumbnail", "ended_at"]
+        labels = {
+            "company": "Nama Perusahaan/Organisasi",
+            "title": "Posisi",
+            "description": "Deskripsi Pekerjaan",
+            "category": "Kategori",
+            "thumbnail": "URL Gambar",
+            "ended_at": "Tanggal Selesai (kosongkan jika masih berlangsung)",
+        }
+        widgets = {
+            "company": TextInput(attrs={"placeholder": "Nama perusahaan atau organisasi"}),
+            "title": TextInput(
+                attrs={"placeholder": "Software Engineer Intern", "maxlength": 255}
+            ),
+            "description": Textarea(
+                attrs={"placeholder": "Ceritakan pekerjaan dan kontribusimu", "rows": 3}
+            ),
+            "thumbnail": URLInput(
+                attrs={"placeholder": "https://example.com/logo.png"}
+            ),
+        }
+
+    def clean_company(self):
+        company = strip_tags(self.cleaned_data["company"]).strip()
+        if not company:
+            raise ValidationError("Nama perusahaan atau organisasi wajib diisi.")
+        return company
+
+    def clean_title(self):
+        title = strip_tags(self.cleaned_data["title"]).strip()
+        if not title:
+            raise ValidationError("Posisi wajib diisi.")
+        return title
+
+    def clean_description(self):
+        description = strip_tags(self.cleaned_data["description"]).strip()
+        if not description:
+            raise ValidationError("Deskripsi pekerjaan wajib diisi.")
+        return description

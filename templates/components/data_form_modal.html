@@ -1,0 +1,39 @@
+<div id="{{ modal_id }}"
+     class="project-form-modal"
+     popover="auto"
+     role="dialog"
+     aria-modal="true"
+     aria-labelledby="{{ modal_id }}-title">
+    <button type="button"
+            class="project-form-modal__backdrop"
+            popovertarget="{{ modal_id }}"
+            popovertargetaction="hide"
+            aria-label="Tutup {{ modal_title }}"></button>
+    <div class="project-form-modal__content">
+        <button type="button"
+                class="project-form-modal__close"
+                popovertarget="{{ modal_id }}"
+                popovertargetaction="hide"
+                aria-label="Tutup {{ modal_title }}">×</button>
+        <h2 id="{{ modal_id }}-title">{{ modal_title }}</h2>
+        <form id="{{ form_id }}"
+              method="post"
+              action="{% url url_name %}"
+              class="project-form">
+            {% csrf_token %}
+            {% for field in form %}
+                <div class="form-group">
+                    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                    {{ field }}
+                </div>
+            {% endfor %}
+            <div class="project-form-modal__actions">
+                <button type="button"
+                        class="button button-secondary"
+                        popovertarget="{{ modal_id }}"
+                        popovertargetaction="hide">Batal</button>
+                <button type="submit" class="button">{{ submit_label }}</button>
+            </div>
+        </form>
+    </div>
+</div>

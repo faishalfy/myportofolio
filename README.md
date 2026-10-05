@@ -37,13 +37,27 @@ Peran :
 
 3. Ketika browser mengakses URL API, misalnya `/api/education/`. URL tersebut meneruskan request ke fungsi view `get_education_json`. View kemudian mengambil data `Education` dari database. Data tersebut masih berupa objek model Django, sehingga dilakukan proses serialization. Hasil serialization berupa string JSON yang berisi nama model, primary key, dan nilai setiap field. String JSON tersebut kemudian dikembalikan menggunakan `HttpResponse` dengan `content_type="application/json"`. Dengan begitu, browser atau aplikasi lain dapat mengenali bahwa response tersebut berisi data JSON dan memprosesnya sebagai data terstruktur. Serialization diperlukan karena objek model Django dan QuerySet bukan merupakan format yang dapat langsung dikirim melalui HTTP atau dibaca oleh JavaScript. Serialization mengubah objek tersebut menjadi format standar, yaitu JSON, sehingga data dapat ditransmisikan dan digunakan oleh client. Saat data JSON ingin digunakan kembali sebagai objek Django, proses kebalikannya disebut deserialization.
 
+### Tugas 5
+1. Debouncing adalah teknik untuk menunda eksekusi selama rentang waktu yang ditentukan, sehingga fungsi tidak terus dijalankan secara berlebihan saat user mengetik. Debouncing penting pada fitur pencarian AJAX, karena bisa mengurasi beban server (dalam hal ini jumlah request ke user berkurang dibanding tanpa Debouncing), menghemat kuota user, menghindari race condition, dan meningkatkan performa browser.
+
+2. `awai` pada `fetch()` berfungsi untuk menunda eksekusi kode di dalam fungsi `async` sampai proses pengambilan data dari server selesai dan mengembalikan `Response`. Jika `await` tidak digunakan saat memanggil `fetch()`, maka : 
+- Error saat parsing data, program akan mengalami error karena objek `Response` yang asli belum selesai diproses.
+- Kode akan berjalan tanpa menunggu datanya selesai diproses secara utuh.
+
+3. XSS (Cross-Site Scripting) adalah celah keamanan siber yang memungkinkan attacker menyisipkan skrip illegal ke halaman web, sehingga kredential token atau cookie tercuri dan bisa melakukan perubahan tampilan web user lain. Data yang dimuat melalui AJAX/JS lebih rentan terhadap XSS dibanding Django, karena :
+-Django secara otomatis melakukan escaping (filter karkater khusus HTML seperti < atau >), jadi skripnya akan diubah menjadi teks biasa.
+-AJAX mengambil raw data dari server, lalu developer memasukkannya langsung ke elemen HTML (memanipulasi DOM secara langsung)
+-Developer harus secara manual melakukan fungsi sanitization sebelum merender data ke DOM. (Jadi tidak boleh lupa)
+
 ### AI Disclosure
 
-- Saya menggunakan OpenAI Codex (gpt-5.6/luna) untuk membantu proses pengerjaan. AI digunakan untuk membuat draft struktur HTML semantik, menyusun CSS responsive, merancang menu mobile berbasis `<details>`, melakukan audit selector CSS, dan menyusun dokumentasi awal.
+- Saya menggunakan OpenAI Codex (gpt-6/luna) untuk membantu proses pengerjaan. AI digunakan untuk membuat draft struktur HTML semantik, menyusun CSS responsive, merancang menu mobile berbasis `<details>`, melakukan audit selector CSS, dan menyusun dokumentasi awal.
 - Saya memberikan konteks repository, batasan teknis, dan kebutuhan fitur terlebih dahulu.
 - Section profile, experience, tanggal, kontak, gambar, urutan visual, dan keputusan untuk tetap menggunakan static web ditentukan dan diverifikasi secara manual. Saya memastikan bahwa implementasi tidak menambahkankan fitur di luar scope yang ditentukan.
 - AI memiliki keterbatasan dalam memahami konteks proyek secara keseluruhan. Saya perlu mengevaluasi hasilnya dan memastikan interface yang ada sudah sesuai.
+
 - Link chat untuk Tugas 1 : https://chatgpt.com/s/cx_6a9edb41d63c8191836bd7813e0bcc78
 - Link chat untuk Tugas 2 : saya tidak menggunakan AI untuk implement tugas ke-2, AI hanya digunakan untuk membantu jawaban Tugas 2 pada no 1
 - Link chat untuk Tugas 3 : https://chatgpt.com/s/cx_6ab14b5073288191aa3eecb4d269baf5
 - Link chat untuk Tugas 4 : https://chatgpt.com/s/cx_6ab9e84c9fbc8191972b5f0e9ff43c3f
+- Link chat untuk Tugas 5 : https://chatgpt.com/s/cx_6ac3a45e86388191b8d2f52d8ea50fc0
