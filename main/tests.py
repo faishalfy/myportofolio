@@ -37,26 +37,29 @@ class MainTest(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, "experience.html")
-        self.assertContains(response, self.experience.title)
-        self.assertContains(response, self.experience.description)
-        self.assertContains(response, "Part-Time")
-        self.assertContains(response, "Sedang berlangsung")
+        self.assertContains(response, 'data-api-url="/api/experience/"')
+        item = self.client.get(reverse("main:get_experience_json")).json()[0]
+        self.assertEqual(item["title"], self.experience.title)
+        self.assertEqual(item["description"], self.experience.description)
+        self.assertEqual(item["category"], "Part-Time")
+        self.assertTrue(item["is_ongoing"])
         self.assertContains(response, f'href="{reverse("main:show_main")}"')
 
     def test_empty_experience_page(self):
         Experience.objects.all().delete()
-        response = self.client.get(reverse("main:show_experience"))
+        self.client.get(reverse("main:show_experience"))
 
-        self.assertContains(response, "Belum ada pengalaman yang ditambahkan.")
+        self.assertEqual(self.client.get(reverse("main:get_experience_json")).json(), [])
 
     def test_completed_experience(self):
         self.experience.ended_at = timezone.now()
         self.experience.save()
-        response = self.client.get(reverse("main:show_experience"))
+        self.client.get(reverse("main:show_experience"))
 
         self.assertFalse(self.experience.is_ongoing)
-        self.assertContains(response, "Selesai")
-        self.assertNotContains(response, "Sedang berlangsung")
+        item = self.client.get(reverse("main:get_experience_json")).json()[0]
+        self.assertFalse(item["is_ongoing"])
+        self.assertIsNotNone(item["ended_at"])
 
     def test_education_url_uses_correct_template(self) :
         response = self.client.get(reverse("main:show_education"))
@@ -75,18 +78,15 @@ class MainTest(TestCase):
         )
 
         response = self.client.get(reverse("main:show_education"))
-
-        self.assertContains(response, "SMA Semesta")
-        self.assertContains(response, "SMA")
-        self.assertContains(response, "Science")
+        self.assertContains(response, 'data-api-url="/api/education/"')
+        item = self.client.get(reverse("main:get_education_json")).json()[0]
+        self.assertEqual(item["institution"], "SMA Semesta")
+        self.assertEqual(item["education_level"], "SMA")
+        self.assertEqual(item["study_program"], "Science")
 
     def test_empty_education_page_shows_message(self) :
-        response = self.client.get(reverse("main:show_education"))
-
-        self.assertContains(
-            response,
-            "Belum ada riwayat pendidikan yang ditambahkan"
-        )
+        self.client.get(reverse("main:show_education"))
+        self.assertEqual(self.client.get(reverse("main:get_education_json")).json(), [])
 
 
 class AuthorizationAndStarTest(TestCase):
@@ -294,16 +294,16 @@ class AuthorizationAndStarTest(TestCase):
                 "project_image_url",
             },
         )
+        search_response = self.client.get(
+            reverse("main:get_projects_json"), {"title": "portfolio"}
+        )
+        self.assertEqual([row["pk"] for row in search_response.json()], [str(self.project.pk)])
 
     def test_action_buttons_are_hidden_by_role(self):
         project_edit_url = reverse("main:update_project", args=[self.project.id])
         project_delete_url = reverse("main:delete_project", args=[self.project.id])
-        education_edit_url = reverse(
-            "main:update_education", args=[self.education.id]
-        )
-        education_delete_url = reverse(
-            "main:delete_education", args=[self.education.id]
-        )
+        education_edit_url = reverse("main:update_education", args=[self.education.id])
+        education_delete_url = reverse("main:delete_education", args=[self.education.id])
         roles = [
             ("anonymous", None, False, False),
             ("regular", self.regular, False, True),
@@ -318,19 +318,32 @@ class AuthorizationAndStarTest(TestCase):
             with self.subTest(role=name):
                 project_response = self.client.get(reverse("main:show_projects"))
                 education_response = self.client.get(reverse("main:show_education"))
+                education_item = self.client.get(
+                    reverse("main:get_education_json")
+                ).json()[0]
 
                 for response, marker, visible in [
                     (project_response, 'popovertarget="add-project-modal"', user and user.is_superuser),
                     (project_response, f'href="{project_edit_url}"', can_edit),
                     (project_response, f'action="{project_delete_url}"', user and user.is_superuser),
-                    (education_response, reverse("main:create_education"), user and user.is_superuser),
-                    (education_response, f'href="{education_edit_url}"', can_edit),
-                    (education_response, f'action="{education_delete_url}"', user and user.is_superuser),
                 ]:
                     if visible:
                         self.assertContains(response, marker)
                     else:
                         self.assertNotContains(response, marker)
+
+                self.assertEqual(
+                    education_item["edit_url"], education_edit_url if can_edit else None
+                )
+                self.assertEqual(
+                    education_item["delete_url"],
+                    education_delete_url if user and user.is_superuser else None,
+                )
+                add_education_marker = 'popovertarget="add-education-modal"'
+                if user and user.is_superuser:
+                    self.assertContains(education_response, add_education_marker)
+                else:
+                    self.assertNotContains(education_response, add_education_marker)
 
                 star_url = reverse("main:toggle_star", args=[self.project.id])
                 if can_star:

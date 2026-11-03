@@ -49,13 +49,13 @@ def show_education(request):
 def show_projects(request):
     projects = Project.objects.prefetch_related("starred_by")
     title_query = request.GET.get("title", "").strip()
-
-    if title_query:
-        projects = projects.filter(title__icontains=title_query)
+    visible_projects = projects.filter(title__icontains=title_query) if title_query else projects
+    visible_project_ids = set(visible_projects.values_list("pk", flat=True))
 
     context = {
         "name": "Faishal Falih",
         "project_list": projects,
+        "visible_project_ids": visible_project_ids,
         "form": ProjectForm(),
         "title_query": title_query,
         "is_editor": is_editor(request.user),
@@ -168,7 +168,6 @@ def get_projects_json(request):
     for project in projects:
         starred_users = project.starred_by.all()
         is_starred = request.user in starred_users if request.user.is_authenticated else False
-        starred_by_names = ", ".join([u.username for u in starred_users])
 
         data.append({
             "pk": str(project.id),
@@ -178,10 +177,9 @@ def get_projects_json(request):
                 "tech_stack": project.tech_stack,
                 "project_url": project.project_url,
                 "project_image_url": project.project_image_url,
-                "star_count": starred_users.count(),
-                "is_starred": is_starred,
-                "starred_by_names": starred_by_names,
-            }
+            },
+            "star_count": starred_users.count(),
+            "is_starred": is_starred,
         })
 
     return JsonResponse(data, safe=False)

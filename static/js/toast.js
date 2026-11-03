@@ -1,5 +1,23 @@
 let toastTimer;
 
+function getCookie(name) {
+    const cookie = document.cookie
+        .split(";")
+        .map((value) => value.trim())
+        .find((value) => value.startsWith(`${name}=`));
+    return cookie ? decodeURIComponent(cookie.slice(name.length + 1)) : null;
+}
+
+function escapeHtml(value) {
+    return String(value).replace(/[&<>"']/g, (character) => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;",
+    })[character]);
+}
+
 function showToast(title, message, type='normal', duration=3000) {
     const toastComponent = document.getElementById('toast-component');
     const toastTitle = document.getElementById('toast-title');

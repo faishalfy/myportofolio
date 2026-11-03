@@ -25,10 +25,12 @@
                         </button>
                     </div>
                 </div>
-                <form method="get"
+                <form id="project-search-form"
+                      method="get"
                       action="{% url 'main:show_projects' %}"
                       class="project-search">
-                    <input type="search"
+                    <input id="project-search"
+                           type="search"
                            name="title"
                            value="{{ title_query }}"
                            placeholder="Cari berdasarkan nama proyek"
@@ -37,9 +39,20 @@
                     <button type="submit" class="button">Cari</button>
                 </form>
 
-                <div class="experience-grid project-grid">
+                <p id="project-status"
+                   class="empty-state"
+                   role="status"
+                   aria-live="polite"
+                   {% if visible_project_ids %}hidden{% endif %}>
+                    {% if title_query %}Tidak ada proyek dengan nama tersebut.{% else %}Belum ada proyek yang ditambahkan.{% endif %}
+                </p>
+                <div id="project-list"
+                     class="experience-grid project-grid"
+                     data-api-url="{% url 'main:get_projects_json' %}">
                     {% for project in project_list %}
-                        <article class="experience-card">
+                        <article class="experience-card"
+                                 data-project-id="{{ project.pk }}"
+                                 {% if project.pk not in visible_project_ids %}hidden{% endif %}>
                             {% if project.project_image_url %}
                                 <img src="{{ project.project_image_url }}"
                                      alt="Gambar {{ project.title }}"
@@ -63,12 +76,6 @@
                                 </div>
                             </div>
                         </article>
-                    {% empty %}
-                        {% if title_query %}
-                            <p class="empty-state">Tidak ada proyek dengan nama tersebut.</p>
-                        {% else %}
-                            <p class="empty-state">Belum ada proyek yang ditambahkan.</p>
-                        {% endif %}
                     {% endfor %}
                 </div>
             </div>
@@ -85,9 +92,11 @@
             submitButton.disabled = true;
 
             try {
+                const csrfToken = getCookie("csrftoken");
                 const response = await fetch(projectForm.action, {
                     method: "POST",
                     body: new FormData(projectForm),
+                    headers: csrfToken ? { "X-CSRFToken": csrfToken } : {},
                 });
                 const result = await response.json();
 
@@ -107,6 +116,58 @@
                 submitButton.disabled = false;
             }
         });
+
     </script>
     {% endif %}
+
+    <script>
+        const projectSearchForm = document.getElementById("project-search-form");
+        const projectSearch = document.getElementById("project-search");
+        const projectList = document.getElementById("project-list");
+        const projectStatus = document.getElementById("project-status");
+        let projectSearchTimer;
+        let projectSearchRequest;
+
+        async function searchProjects() {
+            if (projectSearchRequest) projectSearchRequest.abort();
+            projectSearchRequest = new AbortController();
+            projectStatus.hidden = false;
+            projectStatus.textContent = "Memuat proyek...";
+
+            const url = new URL(projectList.dataset.apiUrl, window.location.href);
+            url.searchParams.set("title", projectSearch.value.trim());
+
+            try {
+                const response = await fetch(url, { signal: projectSearchRequest.signal });
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                const projects = await response.json();
+                const matchingIds = new Set(projects.map(({ pk }) => pk));
+                for (const card of projectList.querySelectorAll("[data-project-id]")) {
+                    card.hidden = !matchingIds.has(card.dataset.projectId);
+                }
+
+                projectStatus.hidden = matchingIds.size > 0;
+                if (!matchingIds.size) {
+                    projectStatus.textContent = projectSearch.value.trim()
+                        ? "Tidak ada proyek dengan nama tersebut."
+                        : "Belum ada proyek yang ditambahkan.";
+                }
+            } catch (error) {
+                if (error.name === "AbortError") return;
+                projectStatus.hidden = true;
+                showToast("Gagal mencari proyek", "Data proyek gagal dimuat. Coba lagi.", "error");
+            }
+        }
+
+        projectSearch.addEventListener("input", function () {
+            clearTimeout(projectSearchTimer);
+            projectSearchTimer = setTimeout(searchProjects, 300);
+        });
+
+        projectSearchForm.addEventListener("submit", function (event) {
+            event.preventDefault();
+            clearTimeout(projectSearchTimer);
+            searchProjects();
+        });
+    </script>
 {% endblock content %}

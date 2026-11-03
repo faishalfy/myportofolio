@@ -777,6 +777,10 @@ summary:focus-visible,
     flex-direction: column;
 }
 
+.project-grid [hidden] {
+    display: none;
+}
+
 .project-image {
     display: block;
     width: 100%;

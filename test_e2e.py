@@ -1,41 +1,40 @@
 import os
 import sys
-import django
 from dotenv import load_dotenv
-from selenium import webdriver
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-
-load_dotenv()
-
-USER_PASSWORD = os.getenv("E2E_USER_PASSWORD")
-ADMIN_PASSWORD = os.getenv("E2E_ADMIN_PASSWORD")
-
-if not USER_PASSWORD or not ADMIN_PASSWORD:
-    sys.exit("E2E_USER_PASSWORD dan E2E_ADMIN_PASSWORD belum diisi di berkas .env.")
+import django
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "portofolio.settings")
 django.setup()
 from django.contrib.auth.models import User
 
 
-def setup_users():
+def setup_users(user_password, admin_password):
     user, _ = User.objects.get_or_create(username="burhan_test")
-    user.set_password(USER_PASSWORD)
+    user.set_password(user_password)
     user.is_superuser = False
     user.is_staff = False
     user.save()
 
     admin, _ = User.objects.get_or_create(username="admin_test")
-    admin.set_password(ADMIN_PASSWORD)
+    admin.set_password(admin_password)
     admin.is_superuser = True
     admin.is_staff = True
     admin.save()
 
 
 def main():
-    setup_users()
+    load_dotenv()
+    user_password = os.getenv("E2E_USER_PASSWORD")
+    admin_password = os.getenv("E2E_ADMIN_PASSWORD")
+    if not user_password or not admin_password:
+        sys.exit("E2E_USER_PASSWORD dan E2E_ADMIN_PASSWORD belum diisi di berkas .env.")
+
+    from selenium import webdriver
+    from selenium.webdriver.common.by import By
+    from selenium.webdriver.support.ui import WebDriverWait
+    from selenium.webdriver.support import expected_conditions as EC
+
+    setup_users(user_password, admin_password)
 
     options = webdriver.ChromeOptions()
     if "--headless" in sys.argv:
