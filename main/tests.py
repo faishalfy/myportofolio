@@ -78,7 +78,7 @@ class MainTest(TestCase):
         )
 
         response = self.client.get(reverse("main:show_education"))
-        self.assertContains(response, 'data-api-url="/api/education/"')
+        self.assertContains(response, 'data-api-url="/api/v1/education/"')
         item = self.client.get(reverse("main:get_education_json")).json()[0]
         self.assertEqual(item["institution"], "SMA Semesta")
         self.assertEqual(item["education_level"], "SMA")
@@ -300,8 +300,6 @@ class AuthorizationAndStarTest(TestCase):
         self.assertEqual([row["pk"] for row in search_response.json()], [str(self.project.pk)])
 
     def test_action_buttons_are_hidden_by_role(self):
-        project_edit_url = reverse("main:update_project", args=[self.project.id])
-        project_delete_url = reverse("main:delete_project", args=[self.project.id])
         education_edit_url = reverse("main:update_education", args=[self.education.id])
         education_delete_url = reverse("main:delete_education", args=[self.education.id])
         roles = [
@@ -324,8 +322,8 @@ class AuthorizationAndStarTest(TestCase):
 
                 for response, marker, visible in [
                     (project_response, 'popovertarget="add-project-modal"', user and user.is_superuser),
-                    (project_response, f'href="{project_edit_url}"', can_edit),
-                    (project_response, f'action="{project_delete_url}"', user and user.is_superuser),
+                    (project_response, 'const canEdit = true;', can_edit),
+                    (project_response, 'const isOwner = true;', user and user.is_superuser),
                 ]:
                     if visible:
                         self.assertContains(response, marker)
@@ -345,9 +343,7 @@ class AuthorizationAndStarTest(TestCase):
                 else:
                     self.assertNotContains(education_response, add_education_marker)
 
-                star_url = reverse("main:toggle_star", args=[self.project.id])
                 if can_star:
-                    self.assertContains(project_response, f'action="{star_url}"')
-                    self.assertNotContains(project_response, "Login untuk memberi star")
+                    self.assertContains(project_response, 'const isLoggedIn = true;')
                 else:
-                    self.assertContains(project_response, "Login untuk memberi star")
+                    self.assertContains(project_response, 'const isLoggedIn = false;')

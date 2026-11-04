@@ -40,6 +40,7 @@ def show_experience(request):
 def show_education(request):
     context = {
         "name": "Faishal Falih",
+        "can_edit": can_edit(request.user),
     }
     if request.user.is_superuser:
         context["education_form"] = EducationForm()
@@ -47,18 +48,12 @@ def show_education(request):
 
 
 def show_projects(request):
-    projects = Project.objects.prefetch_related("starred_by")
     title_query = request.GET.get("title", "").strip()
-    visible_projects = projects.filter(title__icontains=title_query) if title_query else projects
-    visible_project_ids = set(visible_projects.values_list("pk", flat=True))
-
     context = {
         "name": "Faishal Falih",
-        "project_list": projects,
-        "visible_project_ids": visible_project_ids,
         "form": ProjectForm(),
         "title_query": title_query,
-        "is_editor": is_editor(request.user),
+        "can_edit": can_edit(request.user),
     }
     return render(request, "project.html", context)
 
