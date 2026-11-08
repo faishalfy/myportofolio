@@ -154,15 +154,18 @@ class EducationAPITest(APITestCase):
 
     def test_guest_and_regular_user_cannot_write(self):
         for user in (None, self.visitor):
-            self.client.force_authenticate(user=user)
-            self.assertEqual(self.client.post(self.list_url, self.payload, format="json").status_code, 403)
-            self.assertEqual(self.client.patch(self.detail_url, {"institution": "Changed"}, format="json").status_code, 403)
-            self.assertEqual(self.client.delete(self.detail_url).status_code, 403)
-        self.education.refresh_from_db()
-        self.assertEqual(self.education.institution, "Universitas Indonesia")
-        self.assertEqual(Education.objects.count(), 1)
+            with self.subTest(user=user):
+                self.client.force_authenticate(user=user)
+                self.assertEqual(self.client.post(self.list_url, self.payload, format="json").status_code, 403)
+                self.assertEqual(self.client.put(self.detail_url, self.payload, format="json").status_code, 403)
+                self.assertEqual(self.client.patch(self.detail_url, {"institution": "Changed"}, format="json").status_code, 403)
+                self.assertEqual(self.client.delete(self.detail_url).status_code, 403)
+                self.education.refresh_from_db()
+                self.assertEqual(self.education.institution, "Universitas Indonesia")
+                self.assertEqual(self.education.start_year, 2025)
+                self.assertEqual(Education.objects.count(), 1)
 
-    def test_editor_can_patch_but_cannot_create_or_delete(self):
+    def test_editor_can_update_but_cannot_create_or_delete(self):
         self.client.force_authenticate(user=self.editor)
         self.assertEqual(self.client.post(self.list_url, self.payload, format="json").status_code, 403)
         self.assertEqual(Education.objects.count(), 1)
@@ -171,6 +174,17 @@ class EducationAPITest(APITestCase):
         self.assertEqual(self.client.patch(self.detail_url, {"institution": "Updated"}, format="json").status_code, 200)
         self.education.refresh_from_db()
         self.assertEqual(self.education.institution, "Updated")
+        self.assertEqual(self.education.start_year, 2025)
+
+        incomplete = self.client.put(self.detail_url, {"institution": "Incomplete"}, format="json")
+        self.assertEqual(incomplete.status_code, 400)
+        self.education.refresh_from_db()
+        self.assertEqual(self.education.institution, "Updated")
+
+        self.assertEqual(self.client.put(self.detail_url, self.payload, format="json").status_code, 200)
+        self.education.refresh_from_db()
+        self.assertEqual(self.education.institution, self.payload["institution"])
+        self.assertEqual(self.education.start_year, self.payload["start_year"])
 
     def test_owner_can_create_update_and_delete(self):
         self.client.force_authenticate(user=self.owner)
@@ -201,20 +215,27 @@ class EducationAPITest(APITestCase):
 
     def test_star_requires_login_and_toggles(self):
         self.assertEqual(self.client.post(self.star_url).status_code, 403)
+        self.assertFalse(self.education.starred_by.exists())
         self.client.force_authenticate(user=self.visitor)
-        response = self.client.post(self.star_url)
+        response = self.client.post(self.star_url, {"user_id": self.editor.pk}, format="json")
         self.assertEqual(response.status_code, 200)
         self.assertTrue(response.data["is_starred"])
         self.assertEqual(response.data["star_count"], 1)
-        self.assertTrue(self.education.starred_by.filter(pk=self.visitor.pk).exists())
-        response = self.client.post(self.star_url)
-        self.assertFalse(response.data["is_starred"])
-        self.assertEqual(response.data["star_count"], 0)
+        self.assertQuerySetEqual(self.education.starred_by.all(), [self.visitor])
 
         self.client.force_authenticate(user=self.editor)
+        response = self.client.get(self.detail_url)
+        self.assertEqual(response.data["star_count"], 1)
+        self.assertFalse(response.data["is_starred"])
         response = self.client.post(self.star_url)
         self.assertTrue(response.data["is_starred"])
+        self.assertEqual(response.data["star_count"], 2)
+
+        self.client.force_authenticate(user=self.visitor)
+        response = self.client.post(self.star_url)
+        self.assertFalse(response.data["is_starred"])
         self.assertEqual(response.data["star_count"], 1)
+        self.assertQuerySetEqual(self.education.starred_by.all(), [self.editor])
 
     def test_missing_education_returns_404(self):
         self.assertEqual(self.client.get(reverse(
@@ -237,3 +258,15 @@ class EducationAPITest(APITestCase):
             self.list_url, self.payload, format="json", HTTP_X_CSRFTOKEN=token,
         )
         self.assertEqual(response.status_code, 201)
+
+    def test_session_star_requires_csrf(self):
+        client = APIClient(enforce_csrf_checks=True)
+        self.assertTrue(client.login(username="visitor", password="password"))
+        self.assertEqual(client.get(reverse("main:show_education")).status_code, 200)
+        self.assertEqual(client.post(self.star_url).status_code, 403)
+        self.assertFalse(self.education.starred_by.exists())
+
+        token = client.cookies["csrftoken"].value
+        response = client.post(self.star_url, HTTP_X_CSRFTOKEN=token)
+        self.assertEqual(response.status_code, 200)
+        self.assertQuerySetEqual(self.education.starred_by.all(), [self.visitor])
