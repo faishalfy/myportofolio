@@ -44,13 +44,16 @@ class ProjectSerializer(serializers.ModelSerializer):
 
 
 class EducationSerializer(serializers.ModelSerializer):
+    star_count = serializers.SerializerMethodField()
+    is_starred = serializers.SerializerMethodField()
+
     class Meta:
         model = Education
         fields = [
             "id", "institution", "education_level", "study_program",
-            "start_year", "end_year", "logo_url",
+            "start_year", "end_year", "logo_url", "star_count", "is_starred",
         ]
-        read_only_fields = ["id"]
+        read_only_fields = ["id", "star_count", "is_starred"]
 
     def validate_institution(self, value):
         value = strip_tags(value).strip()
@@ -66,3 +69,14 @@ class EducationSerializer(serializers.ModelSerializer):
 
     def validate_study_program(self, value):
         return strip_tags(value).strip()
+
+    def get_star_count(self, obj):
+        return obj.starred_by.count()
+
+    def get_is_starred(self, obj):
+        request = self.context.get("request")
+        return bool(
+            request
+            and request.user.is_authenticated
+            and obj.starred_by.filter(pk=request.user.pk).exists()
+        )

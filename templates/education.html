@@ -35,16 +35,40 @@
                      class="experience-grid"
                      data-api-url="{% url 'api:education-list' %}"
                      data-detail-url="{% url 'api:education-detail' '00000000-0000-0000-0000-000000000000' %}"
-                     data-edit-url="{% url 'main:update_education' '00000000-0000-0000-0000-000000000000' %}"
+                     data-star-url="{% url 'api:education-star' '00000000-0000-0000-0000-000000000000' %}"
                      data-can-edit="{{ can_edit|yesno:'true,false' }}"
-                     data-is-owner="{{ user.is_superuser|yesno:'true,false' }}"></div>
+                     data-is-owner="{{ user.is_superuser|yesno:'true,false' }}"
+                     data-is-authenticated="{{ user.is_authenticated|yesno:'true,false' }}"></div>
                 <form id="education-csrf-form" hidden>{% csrf_token %}</form>
             </div>
         </section>
     </main>
 
     {% if user.is_superuser %}
-        {% include "components/data_form_modal.html" with modal_id="add-education-modal" modal_title="Tambah Pendidikan" form_id="education-form" submit_label="Tambah Pendidikan" url_name="api:education-list" form=education_form %}
+        {% include "components/data_form_modal.html" with modal_id="add-education-modal" modal_title="Tambah Pendidikan" form_id="education-form" submit_label="Tambah Pendidikan" url_name="api:education-list" form=education_add_form %}
+    {% endif %}
+
+    {% if can_edit %}
+        <div id="edit-education-modal" class="project-form-modal" popover="auto" role="dialog" aria-modal="true" aria-labelledby="edit-education-title">
+            <button type="button" class="project-form-modal__backdrop" popovertarget="edit-education-modal" popovertargetaction="hide" aria-label="Tutup edit pendidikan"></button>
+            <div class="project-form-modal__content">
+                <button type="button" class="project-form-modal__close" popovertarget="edit-education-modal" popovertargetaction="hide" aria-label="Tutup edit pendidikan">×</button>
+                <h2 id="edit-education-title">Edit Pendidikan</h2>
+                <form id="education-edit-form" class="project-form">
+                    {% csrf_token %}
+                    {% for field in education_form %}
+                        <div class="form-group">
+                            <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                            {{ field }}
+                        </div>
+                    {% endfor %}
+                    <div class="project-form-modal__actions">
+                        <button type="button" class="button button-secondary" popovertarget="edit-education-modal" popovertargetaction="hide">Batal</button>
+                        <button type="submit" class="button">Simpan Perubahan</button>
+                    </div>
+                </form>
+            </div>
+        </div>
     {% endif %}
 
     <iframe data-testid="embed-iframe" style="border-radius:12px" src="https://open.spotify.com/embed/track/0aXrPDQKpsGlZKVzEnurSK?utm_source=generator&si=2c34ee66da2749a9" width="100%" height="152" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>

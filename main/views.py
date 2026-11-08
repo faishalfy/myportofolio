@@ -42,8 +42,10 @@ def show_education(request):
         "name": "Faishal Falih",
         "can_edit": can_edit(request.user),
     }
+    if context["can_edit"]:
+        context["education_form"] = EducationForm(prefix="edit")
     if request.user.is_superuser:
-        context["education_form"] = EducationForm()
+        context["education_add_form"] = EducationForm()
     return render(request, "education.html", context)
 
 

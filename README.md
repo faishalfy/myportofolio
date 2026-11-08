@@ -49,6 +49,24 @@ Peran :
 -AJAX mengambil raw data dari server, lalu developer memasukkannya langsung ke elemen HTML (memanipulasi DOM secara langsung)
 -Developer harus secara manual melakukan fungsi sanitization sebelum merender data ke DOM. (Jadi tidak boleh lupa)
 
+### Tugas 6
+1. REST API adalah gaya arsitektur yang umum dipakai untuk membangun layanan web yang berkomunikasi lewat HTTP dengan resource dan representasi data seperti JSON. Mengembalikan format JSON hanya berarti API Anda menggunakan JSON sebagai media pertukaran data (Representation). Sebuah API baru bisa disebut benar-benar RESTful jika memenuhi seluruh prinsip dasar arsitektur REST : 
+- Menggunakan metode HTTP sesuai fungsinya
+- RESTful API yang matang harus menyediakan link navigasi di dalam respon JSON-nya.
+- Stateless
+PUT mengganti seluruh data resource atau membuat baru jika belum ada. Sedangkan PATCH, mengubah sebagian kecil data resource yang sudah ada.
+
+2. Di Django REST Framework, serializer mengatur bentuk data yang masuk dan keluar dari API. Saat membaca data, EducationSerializer mengubah objek Education menjadi data Python yang siap dirender sebagai JSON. Saat menerima POST atau PATCH, serializer memvalidasi dan membersihkan input. Setelah validasi berhasil, serializer.save() bisa membuat atau memperbarui data.
+Pada Tutorial 05, kita merakit dictionary sendiri lalu mengirimkannya lewat JsonResponse. Cara itu bisa menghasilkan JSON yang sama, tetapi pemilihan field, validasi input, dan format error perlu kita atur sendiri. Dengan ModelSerializer, aturan tersebut bisa didefinisikan di satu tempat dan dipakai ulang oleh beberapa endpoint. Contohnya, daftar dan detail Education sama-sama menampilkan star_count dan is_starred sebagai field read-only. Server menghitung kedua nilainya, sehingga pengguna tidak bisa mengubahnya lewat payload.
+
+3. Autentikasi berguna untuk memvalidasi identitas pengguna, sedangkan Otorisasi lebih ke penentuan apakah pengguna tersebut memiliki hak untuk mengakses resource tertentu. 
+Hak akses harus diperiksa di server, karena : 
+- Frontend bisa dimanipulasi dengan mudah
+- API bisa ditembak langsung tanpa melalui UI
+
+4. Session Authentication bergantung pada mekanisme otomatis peramban (browser) yang rentan terhadap eksploitasi, sedangkan pengujian menggunakan force_authenticate tidak cukup untuk membuktikannya karena metode tersebut membypass seluruh proses otentikasi normal.
+
+
 ### AI Disclosure
 
 - Saya menggunakan OpenAI Codex (gpt-6/luna) untuk membantu proses pengerjaan. AI digunakan untuk membuat draft struktur HTML semantik, menyusun CSS responsive, merancang menu mobile berbasis `<details>`, melakukan audit selector CSS, dan menyusun dokumentasi awal.
@@ -61,3 +79,5 @@ Peran :
 - Link chat untuk Tugas 3 : https://chatgpt.com/s/cx_6ab14b5073288191aa3eecb4d269baf5
 - Link chat untuk Tugas 4 : https://chatgpt.com/s/cx_6ab9e84c9fbc8191972b5f0e9ff43c3f
 - Link chat untuk Tugas 5 : https://chatgpt.com/s/cx_6ac3a45e86388191b8d2f52d8ea50fc0
+- Link chat untuk Tugas 6 : https://chatgpt.com/share/6af08bca-d584-83ec-83a4-ceeab4517ca9
+
