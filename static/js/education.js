@@ -2,8 +2,6 @@ const educationList = document.getElementById("education-list");
 const educationStatus = document.getElementById("education-status");
 const educationSearch = document.getElementById("education-search");
 const educationSearchForm = document.getElementById("education-search-form");
-const detailUrlTemplate = educationList.dataset.detailUrl;
-const csrfToken = () => getCookie("csrftoken");
 let educationSearchTimer;
 let educationRequest;
 
@@ -14,17 +12,33 @@ function textElement(tag, className, value) {
     return element;
 }
 
-function detailUrl(id) {
-    return detailUrlTemplate.replace("00000000-0000-0000-0000-000000000000", id);
+function educationUrl(template, id) {
+    return template.replace("00000000-0000-0000-0000-000000000000", id);
 }
 
 function apiErrorMessage(data, status) {
+    if (data?.detail) return data.detail;
     const messages = Object.entries(data || {}).flatMap(([field, errors]) =>
         (Array.isArray(errors) ? errors : [errors]).map(error =>
-            `${field}: ${typeof error === "string" ? error : error.message || error}`
+            `${field}: ${error?.message ?? error}`
         )
     );
     return messages.join(" ") || `Permintaan gagal (HTTP ${status}).`;
+}
+
+async function educationApi(url, { method = "GET", payload, signal } = {}) {
+    const headers = { Accept: "application/json" };
+    if (method !== "GET") headers["X-CSRFToken"] = getCookie("csrftoken");
+    if (payload !== undefined) headers["Content-Type"] = "application/json";
+
+    const response = await fetch(url, {
+        method, headers, signal, body: JSON.stringify(payload),
+    });
+    if (!response.ok) {
+        const data = await response.json().catch(() => null);
+        throw new Error(apiErrorMessage(data, response.status));
+    }
+    if (response.status !== 204) return response.json();
 }
 
 function renderEducation(item) {
@@ -85,12 +99,7 @@ async function loadEducation() {
     url.searchParams.set("q", educationSearch.value.trim());
 
     try {
-        const response = await fetch(url, {
-            headers: { Accept: "application/json" },
-            signal: educationRequest.signal,
-        });
-        const data = await response.json();
-        if (!response.ok) throw new Error(apiErrorMessage(data, response.status));
+        const data = await educationApi(url, { signal: educationRequest.signal });
         educationList.replaceChildren(...data.map(renderEducation));
         educationStatus.hidden = data.length > 0;
         if (!data.length) {
@@ -127,13 +136,7 @@ if (educationForm) {
         payload.start_year = Number(payload.start_year);
         if (payload.end_year !== null) payload.end_year = Number(payload.end_year);
         try {
-            const response = await fetch(educationForm.action, {
-                method: "POST",
-                headers: { Accept: "application/json", "Content-Type": "application/json", "X-CSRFToken": csrfToken() },
-                body: JSON.stringify(payload),
-            });
-            const data = await response.json();
-            if (!response.ok) throw new Error(apiErrorMessage(data, response.status));
+            await educationApi(educationForm.action, { method: "POST", payload });
             educationForm.reset();
             educationSearch.value = "";
             document.getElementById("add-education-modal").hidePopover();
@@ -163,13 +166,8 @@ if (editForm) {
             logo_url: value("logo_url"),
         };
         try {
-            const response = await fetch(detailUrl(editForm.dataset.educationId), {
-                method: "PATCH",
-                headers: { Accept: "application/json", "Content-Type": "application/json", "X-CSRFToken": csrfToken() },
-                body: JSON.stringify(payload),
-            });
-            const data = await response.json();
-            if (!response.ok) throw new Error(apiErrorMessage(data, response.status));
+            const url = educationUrl(educationList.dataset.detailUrl, editForm.dataset.educationId);
+            await educationApi(url, { method: "PATCH", payload });
             editForm.reset();
             document.getElementById("edit-education-modal").hidePopover();
             showToast("Berhasil", "Pendidikan diperbarui.", "success");
@@ -189,9 +187,8 @@ educationList.addEventListener("click", async event => {
 
     if (edit && editForm) {
         try {
-            const response = await fetch(detailUrl(edit.dataset.editId), { headers: { Accept: "application/json" } });
-            const item = await response.json();
-            if (!response.ok) throw new Error(apiErrorMessage(item, response.status));
+            const url = educationUrl(educationList.dataset.detailUrl, edit.dataset.editId);
+            const item = await educationApi(url);
             for (const name of ["institution", "education_level", "study_program", "start_year", "end_year", "logo_url"]) {
                 editForm.elements.namedItem(`edit-${name}`).value = item[name] ?? "";
             }
@@ -208,15 +205,10 @@ educationList.addEventListener("click", async event => {
     const button = star || remove;
     button.disabled = true;
     const url = star
-        ? detailUrl(star.dataset.starId).replace(/\/$/, "/star/")
-        : detailUrl(remove.dataset.deleteId);
+        ? educationUrl(educationList.dataset.starUrl, star.dataset.starId)
+        : educationUrl(educationList.dataset.detailUrl, remove.dataset.deleteId);
     try {
-        const response = await fetch(url, {
-            method: star ? "POST" : "DELETE",
-            headers: { Accept: "application/json", "X-CSRFToken": csrfToken() },
-        });
-        const data = response.status === 204 ? {} : await response.json();
-        if (!response.ok) throw new Error(apiErrorMessage(data, response.status));
+        await educationApi(url, { method: star ? "POST" : "DELETE" });
         showToast("Berhasil", star ? "Star diperbarui." : "Pendidikan dihapus.", "success");
         await loadEducation();
     } catch (error) {

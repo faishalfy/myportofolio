@@ -35,7 +35,7 @@
                      class="experience-grid"
                      data-api-url="{% url 'api:education-list' %}"
                      data-detail-url="{% url 'api:education-detail' '00000000-0000-0000-0000-000000000000' %}"
-                     data-edit-url="{% url 'main:update_education' '00000000-0000-0000-0000-000000000000' %}"
+                     data-star-url="{% url 'api:education-star' '00000000-0000-0000-0000-000000000000' %}"
                      data-can-edit="{{ can_edit|yesno:'true,false' }}"
                      data-is-owner="{{ user.is_superuser|yesno:'true,false' }}"
                      data-is-authenticated="{{ user.is_authenticated|yesno:'true,false' }}"></div>

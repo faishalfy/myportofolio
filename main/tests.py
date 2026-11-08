@@ -79,14 +79,16 @@ class MainTest(TestCase):
 
         response = self.client.get(reverse("main:show_education"))
         self.assertContains(response, 'data-api-url="/api/v1/education/"')
-        item = self.client.get(reverse("main:get_education_json")).json()[0]
+        self.assertContains(response, 'data-detail-url="/api/v1/education/00000000-0000-0000-0000-000000000000/"')
+        self.assertContains(response, 'data-star-url="/api/v1/education/00000000-0000-0000-0000-000000000000/star/"')
+        item = self.client.get(reverse("api:education-list")).json()[0]
         self.assertEqual(item["institution"], "SMA Semesta")
         self.assertEqual(item["education_level"], "SMA")
         self.assertEqual(item["study_program"], "Science")
 
     def test_empty_education_page_shows_message(self) :
         self.client.get(reverse("main:show_education"))
-        self.assertEqual(self.client.get(reverse("main:get_education_json")).json(), [])
+        self.assertEqual(self.client.get(reverse("api:education-list")).json(), [])
 
 
 class AuthorizationAndStarTest(TestCase):
