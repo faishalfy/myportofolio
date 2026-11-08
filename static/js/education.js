@@ -2,14 +2,29 @@ const educationList = document.getElementById("education-list");
 const educationStatus = document.getElementById("education-status");
 const educationSearch = document.getElementById("education-search");
 const educationSearchForm = document.getElementById("education-search-form");
+const detailUrlTemplate = educationList.dataset.detailUrl;
+const csrfToken = () => getCookie("csrftoken");
 let educationSearchTimer;
 let educationRequest;
 
-function educationText(tag, className, value) {
+function textElement(tag, className, value) {
     const element = document.createElement(tag);
     element.className = className;
-    element.textContent = value;
+    element.textContent = value ?? "";
     return element;
+}
+
+function detailUrl(id) {
+    return detailUrlTemplate.replace("00000000-0000-0000-0000-000000000000", id);
+}
+
+function apiErrorMessage(data, status) {
+    const messages = Object.entries(data || {}).flatMap(([field, errors]) =>
+        (Array.isArray(errors) ? errors : [errors]).map(error =>
+            `${field}: ${typeof error === "string" ? error : error.message || error}`
+        )
+    );
+    return messages.join(" ") || `Permintaan gagal (HTTP ${status}).`;
 }
 
 function renderEducation(item) {
@@ -26,60 +41,59 @@ function renderEducation(item) {
     }
 
     card.append(
-        educationText("span", "experience-category", item.education_level),
-        educationText("h2", "", item.institution),
+        textElement("span", "experience-category", item.education_level),
+        textElement("h2", "", item.institution),
     );
+    if (item.study_program) card.append(textElement("p", "experience-description", item.study_program));
+    card.append(textElement("p", "experience-status", `${item.start_year}—${item.end_year || "Sekarang"}`));
 
-    if (item.study_program) {
-        card.append(educationText("p", "experience-description", item.study_program));
+    const actions = document.createElement("div");
+    actions.className = "project-actions";
+
+    if (educationList.dataset.isAuthenticated === "true") {
+        const star = textElement("button", `button button-star${item.is_starred ? " is-starred" : ""}`, `${item.is_starred ? "Unstar" : "Star"} (${item.star_count})`);
+        star.type = "button";
+        star.dataset.starId = item.id;
+        actions.append(star);
+    } else {
+        actions.append(textElement("span", "experience-status", `★ ${item.star_count}`));
     }
 
-    const endYear = item.end_year || "Sekarang";
-    card.append(educationText("p", "experience-status", `${item.start_year}—${endYear}`));
-
-    if (educationList.dataset.canEdit === "true" || educationList.dataset.isOwner === "true") {
-        const cardActions = document.createElement("div");
-        cardActions.className = "project-card-actions";
-        const actions = document.createElement("div");
-        actions.className = "project-actions";
-
-        if (educationList.dataset.canEdit === "true") {
-            const edit = educationText("a", "button", "Edit");
-            edit.href = educationList.dataset.editUrl.replace("00000000-0000-0000-0000-000000000000", item.id);
-            actions.append(edit);
-        }
-
-        if (educationList.dataset.isOwner === "true") {
-            const remove = educationText("button", "button button-danger", "Hapus");
-            remove.type = "button";
-            remove.dataset.deleteId = item.id;
-            actions.append(remove);
-        }
-
-        cardActions.append(actions);
-        card.append(cardActions);
+    if (educationList.dataset.canEdit === "true") {
+        const edit = textElement("button", "button", "Edit");
+        edit.type = "button";
+        edit.dataset.editId = item.id;
+        actions.append(edit);
     }
-
+    if (educationList.dataset.isOwner === "true") {
+        const remove = textElement("button", "button button-danger", "Hapus");
+        remove.type = "button";
+        remove.dataset.deleteId = item.id;
+        actions.append(remove);
+    }
+    card.append(actions);
     return card;
 }
 
 async function loadEducation() {
-    if (educationRequest) educationRequest.abort();
+    educationRequest?.abort();
     educationRequest = new AbortController();
     educationList.replaceChildren();
     educationStatus.hidden = false;
     educationStatus.textContent = "Memuat data pendidikan...";
-
     const url = new URL(educationList.dataset.apiUrl, window.location.href);
     url.searchParams.set("q", educationSearch.value.trim());
 
     try {
-        const response = await fetch(url, { headers: { Accept: "application/json" }, signal: educationRequest.signal });
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        const educations = await response.json();
-        educationList.replaceChildren(...educations.map(renderEducation));
-        educationStatus.hidden = educations.length > 0;
-        if (!educations.length) {
+        const response = await fetch(url, {
+            headers: { Accept: "application/json" },
+            signal: educationRequest.signal,
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(apiErrorMessage(data, response.status));
+        educationList.replaceChildren(...data.map(renderEducation));
+        educationStatus.hidden = data.length > 0;
+        if (!data.length) {
             educationStatus.textContent = educationSearch.value.trim()
                 ? "Tidak ada riwayat pendidikan yang cocok."
                 : "Belum ada riwayat pendidikan yang ditambahkan.";
@@ -88,16 +102,15 @@ async function loadEducation() {
         if (error.name === "AbortError") return;
         educationStatus.hidden = false;
         educationStatus.textContent = "Data pendidikan gagal dimuat. Coba lagi.";
-        showToast("Gagal memuat Education", educationStatus.textContent, "error");
+        showToast("Gagal memuat Education", error.message, "error");
     }
 }
 
-educationSearch.addEventListener("input", function () {
+educationSearch.addEventListener("input", () => {
     clearTimeout(educationSearchTimer);
     educationSearchTimer = setTimeout(loadEducation, 300);
 });
-
-educationSearchForm.addEventListener("submit", function (event) {
+educationSearchForm.addEventListener("submit", event => {
     event.preventDefault();
     clearTimeout(educationSearchTimer);
     loadEducation();
@@ -105,65 +118,112 @@ educationSearchForm.addEventListener("submit", function (event) {
 
 const educationForm = document.getElementById("education-form");
 if (educationForm) {
-    educationForm.addEventListener("submit", async function (event) {
+    educationForm.addEventListener("submit", async event => {
         event.preventDefault();
-        const submitButton = educationForm.querySelector('button[type="submit"]');
-        submitButton.disabled = true;
-
+        const submit = educationForm.querySelector('button[type="submit"]');
+        submit.disabled = true;
+        const formData = new FormData(educationForm);
+        const payload = Object.fromEntries(["institution", "education_level", "study_program", "start_year", "end_year", "logo_url"].map(name => [name, formData.get(name) || (name === "end_year" ? null : "")]));
+        payload.start_year = Number(payload.start_year);
+        if (payload.end_year !== null) payload.end_year = Number(payload.end_year);
         try {
-            const fields = new FormData(educationForm);
-            const payload = Object.fromEntries(
-                ["institution", "education_level", "study_program", "start_year", "end_year", "logo_url"]
-                    .map(name => [name, fields.get(name) || (name === "end_year" ? null : "")])
-            );
             const response = await fetch(educationForm.action, {
                 method: "POST",
-                headers: {
-                    Accept: "application/json",
-                    "Content-Type": "application/json",
-                    "X-CSRFToken": getCookie("csrftoken"),
-                },
+                headers: { Accept: "application/json", "Content-Type": "application/json", "X-CSRFToken": csrfToken() },
                 body: JSON.stringify(payload),
             });
-            const result = await response.json();
-
-            if (response.status === 201) {
-                educationForm.reset();
-                educationSearch.value = "";
-                document.getElementById("add-education-modal").hidePopover();
-                showToast("Education berhasil ditambahkan", "Pendidikan ditambahkan.", "success");
-                loadEducation();
-                return;
-            }
-
-            const errors = Object.entries(result).flatMap(([field, items]) =>
-                (Array.isArray(items) ? items : [items]).map(message => `${field}: ${message}`));
-            if (!errors.length) errors.push(`Terjadi kesalahan (status ${response.status}).`);
-            showToast("Gagal menambahkan Education", errors.join(" "), "error");
-        } catch {
-            showToast("Gagal menambahkan Education", "Tidak dapat terhubung ke server. Silakan coba lagi.", "error");
+            const data = await response.json();
+            if (!response.ok) throw new Error(apiErrorMessage(data, response.status));
+            educationForm.reset();
+            educationSearch.value = "";
+            document.getElementById("add-education-modal").hidePopover();
+            showToast("Berhasil", "Pendidikan ditambahkan.", "success");
+            await loadEducation();
+        } catch (error) {
+            showToast("Gagal menambahkan Education", error.message, "error");
         } finally {
-            submitButton.disabled = false;
+            submit.disabled = false;
+        }
+    });
+}
+
+const editForm = document.getElementById("education-edit-form");
+if (editForm) {
+    editForm.addEventListener("submit", async event => {
+        event.preventDefault();
+        const submit = editForm.querySelector('button[type="submit"]');
+        submit.disabled = true;
+        const value = name => editForm.elements.namedItem(`edit-${name}`).value;
+        const payload = {
+            institution: value("institution"),
+            education_level: value("education_level"),
+            study_program: value("study_program"),
+            start_year: Number(value("start_year")),
+            end_year: value("end_year") ? Number(value("end_year")) : null,
+            logo_url: value("logo_url"),
+        };
+        try {
+            const response = await fetch(detailUrl(editForm.dataset.educationId), {
+                method: "PATCH",
+                headers: { Accept: "application/json", "Content-Type": "application/json", "X-CSRFToken": csrfToken() },
+                body: JSON.stringify(payload),
+            });
+            const data = await response.json();
+            if (!response.ok) throw new Error(apiErrorMessage(data, response.status));
+            editForm.reset();
+            document.getElementById("edit-education-modal").hidePopover();
+            showToast("Berhasil", "Pendidikan diperbarui.", "success");
+            await loadEducation();
+        } catch (error) {
+            showToast("Gagal mengubah Education", error.message, "error");
+        } finally {
+            submit.disabled = false;
         }
     });
 }
 
 educationList.addEventListener("click", async event => {
+    const star = event.target.closest("button[data-star-id]");
+    const edit = event.target.closest("button[data-edit-id]");
     const remove = event.target.closest("button[data-delete-id]");
-    if (!remove || remove.disabled || !confirm("Hapus pendidikan ini?")) return;
-    remove.disabled = true;
+
+    if (edit && editForm) {
+        try {
+            const response = await fetch(detailUrl(edit.dataset.editId), { headers: { Accept: "application/json" } });
+            const item = await response.json();
+            if (!response.ok) throw new Error(apiErrorMessage(item, response.status));
+            for (const name of ["institution", "education_level", "study_program", "start_year", "end_year", "logo_url"]) {
+                editForm.elements.namedItem(`edit-${name}`).value = item[name] ?? "";
+            }
+            editForm.dataset.educationId = item.id;
+            document.getElementById("edit-education-modal").showPopover();
+        } catch (error) {
+            showToast("Gagal memuat Education", error.message, "error");
+        }
+        return;
+    }
+
+    if (!star && !remove) return;
+    if (remove && !confirm("Hapus pendidikan ini?")) return;
+    const button = star || remove;
+    button.disabled = true;
+    const url = star
+        ? detailUrl(star.dataset.starId).replace(/\/$/, "/star/")
+        : detailUrl(remove.dataset.deleteId);
     try {
-        const url = educationList.dataset.detailUrl.replace("00000000-0000-0000-0000-000000000000", remove.dataset.deleteId);
         const response = await fetch(url, {
-            method: "DELETE",
-            headers: { Accept: "application/json", "X-CSRFToken": getCookie("csrftoken") },
+            method: star ? "POST" : "DELETE",
+            headers: { Accept: "application/json", "X-CSRFToken": csrfToken() },
         });
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        showToast("Berhasil", "Pendidikan dihapus.", "success");
+        const data = response.status === 204 ? {} : await response.json();
+        if (!response.ok) throw new Error(apiErrorMessage(data, response.status));
+        showToast("Berhasil", star ? "Star diperbarui." : "Pendidikan dihapus.", "success");
         await loadEducation();
     } catch (error) {
-        showToast("Gagal menghapus Education", error.message, "error");
-    } finally { remove.disabled = false; }
+        showToast(star ? "Gagal memberi star" : "Gagal menghapus Education", error.message, "error");
+    } finally {
+        button.disabled = false;
+    }
 });
 
 loadEducation();
