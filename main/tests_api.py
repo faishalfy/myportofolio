@@ -3,6 +3,7 @@ import uuid
 from django.contrib.auth.models import Group, User
 from django.test import override_settings
 from django.urls import reverse
+from rest_framework.authtoken.models import Token
 from rest_framework.test import APIClient, APITestCase
 
 from main.models import Education, Project
@@ -187,6 +188,7 @@ class EducationAPITest(APITestCase):
 
     def test_public_read_and_search(self):
         response = self.client.get(self.list_url)
+        self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data[0]["institution"], "Universitas Indonesia")
         self.assertEqual(response.data[0]["star_count"], 0)
         self.assertFalse(response.data[0]["is_starred"])
@@ -199,10 +201,10 @@ class EducationAPITest(APITestCase):
         self.assertEqual(self.client.get(self.detail_url).status_code, 200)
 
     def test_guest_and_regular_user_cannot_write(self):
-        for user in (None, self.visitor):
+        for user, expected_status in ((None, 401), (self.visitor, 403)):
             with self.subTest(user=user):
                 self.client.force_authenticate(user=user)
-                self.assertEqual(self.client.post(self.list_url, self.payload, format="json").status_code, 403)
+                self.assertEqual(self.client.post(self.list_url, self.payload, format="json").status_code, expected_status)
                 self.assertEqual(self.client.put(self.detail_url, self.payload, format="json").status_code, 403)
                 self.assertEqual(self.client.patch(self.detail_url, {"institution": "Changed"}, format="json").status_code, 403)
                 self.assertEqual(self.client.delete(self.detail_url).status_code, 403)
@@ -210,6 +212,23 @@ class EducationAPITest(APITestCase):
                 self.assertEqual(self.education.institution, "Universitas Indonesia")
                 self.assertEqual(self.education.start_year, 2025)
                 self.assertEqual(Education.objects.count(), 1)
+
+    def test_token_permissions_and_revocation(self):
+        client = APIClient(enforce_csrf_checks=True)
+        visitor_token = Token.objects.create(user=self.visitor)
+        client.credentials(HTTP_AUTHORIZATION=f"Token {visitor_token.key}")
+        self.assertEqual(client.post(self.list_url, self.payload, format="json").status_code, 403)
+
+        owner_token = Token.objects.create(user=self.owner)
+        self.assertTrue(client.login(username=self.visitor.username, password="password"))
+        client.credentials(HTTP_AUTHORIZATION=f"Token {owner_token.key}")
+        self.assertEqual(client.post(self.list_url, self.payload, format="json").status_code, 201)
+        self.assertEqual(client.post(reverse("api:api_logout")).status_code, 204)
+
+        response = client.post(self.list_url, self.payload, format="json")
+        self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.headers["WWW-Authenticate"], "Token")
+        self.assertEqual(Education.objects.count(), 2)
 
     def test_editor_can_update_but_cannot_create_or_delete(self):
         self.client.force_authenticate(user=self.editor)
