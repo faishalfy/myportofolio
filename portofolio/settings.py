@@ -44,12 +44,15 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     "portofolio",
     'main',
+    "corsheaders",
     "rest_framework",
+    "rest_framework.authtoken",
 ]
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
@@ -59,6 +62,19 @@ MIDDLEWARE = [
 
 if PRODUCTION:
     MIDDLEWARE.insert(1, 'whitenoise.middleware.WhiteNoiseMiddleware')
+
+REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "rest_framework.authentication.TokenAuthentication",
+        "rest_framework.authentication.SessionAuthentication",
+    ],
+}
+
+CORS_URLS_REGEX = r"^/api/v1/"
+if not PRODUCTION:
+    CORS_ALLOWED_ORIGIN_REGEXES = [
+        r"^https?://(?:localhost|127\.0\.0\.1|\[::1\])(?::\d+)?$",
+    ]
 
 ROOT_URLCONF = 'portofolio.urls'
 

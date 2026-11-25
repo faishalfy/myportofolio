@@ -1,6 +1,7 @@
 import uuid
 
 from django.contrib.auth.models import Group, User
+from django.test import override_settings
 from django.urls import reverse
 from rest_framework.test import APIClient, APITestCase
 
@@ -40,13 +41,58 @@ class ProjectAPITest(APITestCase):
         self.assertEqual(self.client.get(reverse("api:project-detail", args=[uuid.uuid4()])).status_code, 404)
 
     def test_guest_and_visitor_cannot_write(self):
-        for user in (None, self.visitor):
+        for user, expected_status in ((None, 401), (self.visitor, 403)):
             self.client.force_authenticate(user=user)
-            self.assertEqual(self.client.post(self.list_url, self.payload, format="json").status_code, 403)
-            self.assertEqual(self.client.patch(self.detail_url, {"title": "Changed"}, format="json").status_code, 403)
-            self.assertEqual(self.client.delete(self.detail_url).status_code, 403)
+            self.assertEqual(self.client.post(self.list_url, self.payload, format="json").status_code, expected_status)
+            self.assertEqual(self.client.patch(self.detail_url, {"title": "Changed"}, format="json").status_code, expected_status)
+            self.assertEqual(self.client.delete(self.detail_url).status_code, expected_status)
         self.project.refresh_from_db()
         self.assertEqual(self.project.title, "Portfolio")
+
+    def test_owner_can_create_project_with_token_until_logout(self):
+        client = APIClient(enforce_csrf_checks=True)
+        login = client.post(reverse("api:api_token_auth"), {
+            "username": self.owner.username, "password": "test-password",
+        }, format="json")
+        self.assertEqual(login.status_code, 200)
+        client.credentials(HTTP_AUTHORIZATION=f"Token {login.data['token']}")
+
+        self.assertEqual(client.post(self.list_url, self.payload, format="json").status_code, 201)
+        logout = client.post(reverse("api:api_logout"))
+        self.assertEqual(logout.status_code, 204)
+        self.assertEqual(logout.content, b"")
+        self.assertEqual(client.post(self.list_url, self.payload, format="json").status_code, 401)
+        self.assertEqual(Project.objects.count(), 2)
+
+    def test_regular_user_token_does_not_grant_project_write_access(self):
+        login = self.client.post(reverse("api:api_token_auth"), {
+            "username": self.visitor.username, "password": "test-password",
+        }, format="json")
+        self.assertEqual(login.status_code, 200)
+        self.client.credentials(HTTP_AUTHORIZATION=f"Token {login.data['token']}")
+
+        self.assertEqual(self.client.post(self.list_url, self.payload, format="json").status_code, 403)
+        self.assertEqual(Project.objects.count(), 1)
+
+    def test_cors_allows_local_web_client(self):
+        origin = "http://localhost:54321"
+        response = self.client.options(
+            self.list_url,
+            HTTP_ORIGIN=origin,
+            HTTP_ACCESS_CONTROL_REQUEST_METHOD="POST",
+            HTTP_ACCESS_CONTROL_REQUEST_HEADERS="authorization,content-type",
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.headers["Access-Control-Allow-Origin"], origin)
+        self.assertIn("authorization", response.headers["Access-Control-Allow-Headers"])
+        self.assertNotIn("Access-Control-Allow-Origin", self.client.get(
+            self.list_url, HTTP_ORIGIN="https://example.com",
+        ).headers)
+
+    @override_settings(CORS_ALLOWED_ORIGIN_REGEXES=[])
+    def test_cors_blocks_local_origin_without_development_allowlist(self):
+        response = self.client.get(self.list_url, HTTP_ORIGIN="http://localhost:54321")
+        self.assertNotIn("Access-Control-Allow-Origin", response.headers)
 
     def test_staff_and_editor_cannot_manage_tutorial_projects(self):
         self.visitor.is_staff = True
@@ -100,7 +146,7 @@ class ProjectAPITest(APITestCase):
         self.assertEqual(self.client.delete(self.list_url).status_code, 405)
 
     def test_star_requires_login_and_toggles(self):
-        self.assertEqual(self.client.post(self.star_url).status_code, 403)
+        self.assertEqual(self.client.post(self.star_url).status_code, 401)
         self.client.force_authenticate(user=self.visitor)
         response = self.client.post(self.star_url)
         self.assertTrue(response.data["is_starred"])
